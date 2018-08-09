@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Numerics;
 //using System.Globalization;
-//using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 
 namespace Makwa
@@ -116,7 +116,6 @@ namespace Makwa
     public class Hasher
     {
         // Enforce attribute ranges, raise errors when out of range
-        private HMAC _hashfunction = new HMACSHA256();
         public HMAC hashfunction { get; set; } = new HMACSHA256();
         public int workfactor { get; set; } = 4096;
         public bool prehashing { get; set; } = true;
@@ -369,18 +368,18 @@ namespace Makwa
             hashbuffer.Key = K;
             V = hashbuffer.ComputeHash(V);
 
-            
 
-            //IList<byte> T = new List<byte>();
-            //while (T.Count < out_len)
-            //{
-            //    V = hashbuffer.ComputeHash(V);
-            //    byte[] TBuffer = ConcatenateByteArrays(T.ToArray(), V);
 
-            //    T = TBuffer.ToList();
-            //}
-            //var TOut = T.Take(out_len); 
-            //byte[] output = TOut.ToArray();
+            IList<byte> T = new List<byte>();
+            while (T.Count < out_len)
+            {
+                V = hashbuffer.ComputeHash(V);
+                byte[] TBuffer = ConcatenateByteArrays(T.ToArray(), V);
+
+                T = TBuffer.ToList();
+            }
+            var TOut = T.Take(out_len);
+            byte[] output = TOut.ToArray();
 
             return output;
         }
