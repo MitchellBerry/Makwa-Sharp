@@ -99,12 +99,12 @@ namespace Makwa
             return result;
         }
 
-        public static string UnpaddedBase64(byte[] m)
+        public static string UnpaddedB64(byte[] m)
         {
             return Convert.ToBase64String(m).Replace("=", "");
         }
 
-        public static byte[] unbase64(string m)
+        public static byte[] Unbase64(string m)
         {
             int len = ((4 - (m.Length % 4) % 4));
             string padding = new string('=', len);
@@ -116,36 +116,10 @@ namespace Makwa
     public class Hasher
     {
         // Enforce attribute ranges, raise errors when out of range
-        public HMAC hashfunction { get; set; } = new HMACSHA256();
-        public int workfactor { get; set; } = 4096;
-        public bool prehashing { get; set; } = true;
-        public int posthashing { get; set; } = 12;
-
-        //public string HashPassword(byte[] password, BigInteger n, byte[] salt)
-        //{
-        //    if (salt == null)
-        //    {
-        //        byte[] buffer = new byte[16];
-        //        RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
-        //        rng.GetBytes(buffer);
-        //        salt = buffer;
-        //    }
-
-        //    string h = "";
-        //    //byte[] checksum = KDF(Helpers.SimpleBI2B(n), 8);
-        //    //string nhex = n.ToString("X");
-        //    byte[] nArray = n.ToByteArray();
-        //    byte[] checksum = KDF(Helpers.I2OSP(nArray, nArray.Length), 8);
-        //    h += Helpers.base64(checksum);
-        //    h += "_";
-        //    h += GetStateData();
-        //    h += "_";
-        //    h += Helpers.base64(salt);
-        //    h += "_";
-        //    byte[] digestresult = Digest(password, n, salt);
-        //    h += Helpers.base64(digestresult);
-        //    return h;
-        //}
+        public HMAC Hashfunction { get; set; } = new HMACSHA256();
+        public int Workfactor { get; set; } = 4096;
+        public bool Prehashing { get; set; } = true;
+        public int Posthashing { get; set; } = 12;
 
         public string HashPassword(byte[] password, byte[] n, byte[] salt = null)
         {
@@ -161,24 +135,11 @@ namespace Makwa
             {
                 throw new ArgumentOutOfRangeException("Salt must be 16 bytes long");
             }
-            //string h = "";
-            //h += Tools.UnpaddedBase64(KDF(n, 8));
-            //h += "_";
-            //h += GetStateData();
-            //h += "_";
-            //h += Tools.UnpaddedBase64(salt);
-            //h += "_";
-            //h += Tools.UnpaddedBase64(Digest(password, n, salt));
-            string moduluschecksum = Tools.UnpaddedBase64(KDF(n, 8));
+            string moduluschecksum = Tools.UnpaddedB64(KDF(n, 8));
             string statedata = GetStateData();
-            string saltb64 = Tools.UnpaddedBase64(salt);
-            string digestb64 = Tools.UnpaddedBase64(Digest(password, n, salt));
+            string saltb64 = Tools.UnpaddedB64(salt);
+            string digestb64 = Tools.UnpaddedB64(Digest(password, n, salt));
             return CreateHashString(moduluschecksum, statedata, saltb64, digestb64);
-        }
-
-        static string CreateHashString(string moduluschecksum, string statedata, string salt, string digest)
-        {
-            return string.Join("_", new[] { moduluschecksum, statedata, salt, digest });
         }
 
         public byte[] Digest(byte[] password, byte[] mod, byte[] salt)
@@ -189,7 +150,7 @@ namespace Makwa
                 //raise error: Modulus must be greater than 160 bytes
                 throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
             }
-            if (prehashing)
+            if (Prehashing)
             {
                 password = KDF(password, 64);
             }
@@ -209,16 +170,16 @@ namespace Makwa
             BigInteger x = BigInteger.Parse(xbhex, System.Globalization.NumberStyles.HexNumber);
             string modhex = "0" + BitConverter.ToString(mod).Replace("-", "");
             BigInteger n = BigInteger.Parse(modhex, System.Globalization.NumberStyles.HexNumber);
-            BigInteger Y = ModularSquarings(x, workfactor, n);
+            BigInteger Y = ModularSquarings(x, Workfactor, n);
             byte[] y = Y.ToByteArray();
             Array.Reverse(y, 0, y.Length);
             y = y.Skip(1).Take(y.Length).ToArray();
             
-            if (posthashing >= 10)
+            if (Posthashing >= 10)
             {
-                y = KDF(y, posthashing);
+                y = KDF(y, Posthashing);
             }
-            else if (posthashing != 0)
+            else if (Posthashing != 0)
             {
                 throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
             }
@@ -326,8 +287,8 @@ namespace Makwa
         public string GetStateData()
         {
             string output = "";
-            bool pre = prehashing;
-            bool post = Convert.ToBoolean(posthashing);
+            bool pre = Prehashing;
+            bool post = Convert.ToBoolean(Posthashing);
             // TODO: Convert bools to 2 bit binary and use switch case
             if (!pre && !post) { output += "n"; }
             else
@@ -340,7 +301,7 @@ namespace Makwa
                 }
             }
             int delta = 0;
-            int w = workfactor;
+            int w = Workfactor;
             int andResult = w & 1;
             while (andResult == 0)
             {
@@ -366,22 +327,16 @@ namespace Makwa
         {
             byte[] hexzero = new byte[] { 0x00 };
             byte[] hexone = new byte[] { 0x01 };
-            int r = hashfunction.HashSize /8;
+            int r = Hashfunction.HashSize /8;
             byte[] V = InitialiseCustomByteArray(0x01, r);
             byte[] K = InitialiseCustomByteArray(0x00, r);
-
-            // HMAC
-            HMAC hashbuffer = hashfunction;
+            HMAC hashbuffer = Hashfunction;
             hashbuffer.Key = K;
             byte[] hmacdata = ConcatenateByteArrays(V, hexzero, data);
-            K = hashbuffer.ComputeHash(hmacdata);
-            hashbuffer.Key = K;
+            hashbuffer.Key = hashbuffer.ComputeHash(hmacdata);
             V = hashbuffer.ComputeHash(V);
-            K = hashbuffer.ComputeHash(ConcatenateByteArrays(V, hexone, data));
-            hashbuffer.Key = K;
+            hashbuffer.Key = hashbuffer.ComputeHash(ConcatenateByteArrays(V, hexone, data));
             V = hashbuffer.ComputeHash(V);
-
-
 
             IList<byte> T = new List<byte>();
             while (T.Count < out_len)
@@ -397,12 +352,12 @@ namespace Makwa
             return output;
         }
 
-        static byte[] InitialiseCustomByteArray(byte specialbytes, int length)
+        static byte[] InitialiseCustomByteArray(byte custombyte, int length)
         {
             var arr = new byte[length];
             for (int i = 0; i < arr.Length; i++)
             {
-                arr[i] = specialbytes;
+                arr[i] = custombyte;
             }
             return arr;
         }
@@ -417,6 +372,11 @@ namespace Makwa
                 offset += data.Length;
             }
             return output;
+        }
+
+        static string CreateHashString(string moduluschecksum, string statedata, string salt, string digest)
+        {
+            return string.Join("_", new[] { moduluschecksum, statedata, salt, digest });
         }
     }
 
