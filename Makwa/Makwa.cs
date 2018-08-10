@@ -147,9 +147,9 @@ namespace Makwa
         //    return h;
         //}
 
-        public string HashPassword2(byte[] password, byte[] n, byte[] salt = null)
+        public string HashPassword(byte[] password, byte[] n, byte[] salt = null)
         {
-            // Salt variable availabe for tests, best practice is to leave null.
+            // Salt variable availabe for unittests, leave null for randomly generated salt is best practice
             if (salt == null)
             {
                 byte[] buffer = new byte[16];
@@ -157,15 +157,28 @@ namespace Makwa
                 rng.GetBytes(buffer);
                 salt = buffer;
             }
-            string h = "";
-            h += Tools.UnpaddedBase64(KDF(n, 8));
-            h += "_";
-            h += GetStateData();
-            h += "_";
-            h += Tools.UnpaddedBase64(salt);
-            h += "_";
-            h += Tools.UnpaddedBase64(Digest(password, n, salt));
-            return h;
+            if (salt.Length != 16)
+            {
+                throw new ArgumentOutOfRangeException("Salt must be 16 bytes long");
+            }
+            //string h = "";
+            //h += Tools.UnpaddedBase64(KDF(n, 8));
+            //h += "_";
+            //h += GetStateData();
+            //h += "_";
+            //h += Tools.UnpaddedBase64(salt);
+            //h += "_";
+            //h += Tools.UnpaddedBase64(Digest(password, n, salt));
+            string moduluschecksum = Tools.UnpaddedBase64(KDF(n, 8));
+            string statedata = GetStateData();
+            string saltb64 = Tools.UnpaddedBase64(salt);
+            string digestb64 = Tools.UnpaddedBase64(Digest(password, n, salt));
+            return CreateHashString(moduluschecksum, statedata, saltb64, digestb64);
+        }
+
+        static string CreateHashString(string moduluschecksum, string statedata, string salt, string digest)
+        {
+            return string.Join("_", new[] { moduluschecksum, statedata, salt, digest });
         }
 
         public byte[] Digest(byte[] password, byte[] mod, byte[] salt)
