@@ -40,15 +40,6 @@ namespace Makwa
                 bytes[i / 2] = Convert.ToByte(hexstring.Substring(i, 2), 16);
             return bytes;
         }
-
-        public static byte[] HexToBytes(string hex)
-        {
-            return Enumerable.Range(0, hex.Length)
-                             .Where(x => x % 2 == 0)
-                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-                             .ToArray();
-        }
-
     }
 
     public class Hasher
@@ -61,7 +52,7 @@ namespace Makwa
 
         public string HashPassword(byte[] password, byte[] n, byte[] salt = null)
         {
-            // Salt variable availabe for unittests, leave null for randomly generated salt is best practice
+            // Salt variable availabe for unittests, leave null for secure salts
             if (salt == null)
             {
                 byte[] buffer = new byte[16];
@@ -76,7 +67,8 @@ namespace Makwa
             string moduluschecksum = Tools.UnpaddedB64(KDF(n, 8));
             string statedata = GetStateData();
             string saltb64 = Tools.UnpaddedB64(salt);
-            string digestb64 = Tools.UnpaddedB64(Digest(password, n, salt));
+            byte[] digestresult = Digest(password, n, salt);
+            string digestb64 = Tools.UnpaddedB64(digestresult);
             return CreateHashString(moduluschecksum, statedata, saltb64, digestb64);
         }
 
@@ -85,7 +77,6 @@ namespace Makwa
             int k = mod.Length;
             if (k < 160)
             {
-                //raise error: Modulus must be greater than 160 bytes
                 throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
             }
             if (Prehashing)
@@ -95,12 +86,10 @@ namespace Makwa
             int u = password.Length;
             if (u > 255 || u > (k - 32))
             {
-                // raise error: Password is too long to be hashed with these parameters
                 throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
             }
             byte[] ub = new byte[] { (byte)u };
-            byte[] sbinput = ConcatenateByteArrays(salt, password, ub);
-            byte[] sb = KDF(sbinput, k - 2 - u);
+            byte[] sb = KDF(ConcatenateByteArrays(salt, password, ub), k - 2 - u);
             byte[] zerobyte = new byte[] { 0 };
             byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
             string xbhex = BitConverter.ToString(xb).Replace("-", "");
