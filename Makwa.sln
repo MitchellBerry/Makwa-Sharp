@@ -5,7 +5,9 @@ VisualStudioVersion = 15.0.27130.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Makwa", "Makwa\Makwa.csproj", "{1C9A9863-D32A-4FB2-9B0E-2619177DFD52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnownAnswerTests", "KnownAnswerTests\KnownAnswerTests.csproj", "{858944AD-4520-4547-8587-F141B301981A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{858944AD-4520-4547-8587-F141B301981A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{858944AD-4520-4547-8587-F141B301981A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{858944AD-4520-4547-8587-F141B301981A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{858944AD-4520-4547-8587-F141B301981A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
