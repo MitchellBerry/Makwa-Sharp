@@ -40,6 +40,47 @@ namespace Makwa
                 bytes[i / 2] = Convert.ToByte(hexstring.Substring(i, 2), 16);
             return bytes;
         }
+
+        public static bool IsBlumInteger(int n)
+        {
+            bool[] prime = new bool[n + 1];
+            for (int i = 0; i < n; i++)
+                prime[i] = true;
+
+            // to store prime numbers from 2 to n
+            for (int i = 2; i * i <= n; i++)
+            {
+
+                // If prime[i] is not changed,
+                // then it is a prime
+                if (prime[i] == true)
+                {
+
+                    // Update all multiples of p
+                    for (int j = i * 2; j <= n; j += i)
+                        prime[j] = false;
+                }
+            }
+
+            // to check if the given odd integer
+            // is Blum Integer or not
+            for (int i = 2; i <= n; i++)
+            {
+                if (prime[i])
+                {
+
+                    // checking the factors are
+                    // of 4t + 3 form or not
+                    if ((n % i == 0) && ((i - 3) % 4) == 0)
+                    {
+                        int q = n / i;
+                        return (q != i && prime[q] &&
+                               (q - 3) % 4 == 0);
+                    }
+                }
+            }
+            return false;
+        }
     }
 
     public class Hasher
@@ -100,11 +141,24 @@ namespace Makwa
             BigInteger Y = ModularSquarings(x, Workfactor, n);
             byte[] y = Y.ToByteArray();
             Array.Reverse(y, 0, y.Length);
-            y = y.Skip(1).Take(y.Length).ToArray();
-            
+
+            //switch (GetPrePostHashTruthTable())
+            //{
+            //    case 0:
+            //        y = y.Skip(1).Take(y.Length).ToArray();
+            //        break;
+            //}
+
+            if (y.Length == 257)
+            {
+                y = y.Skip(1).Take(y.Length).ToArray();
+            }
+
             if (Posthashing >= 10)
             {
+                //
                 y = KDF(y, Posthashing);
+                
             }
             else if (Posthashing != 0)
             {
@@ -250,11 +304,19 @@ namespace Makwa
             return output;
         }
 
+        public int GetPrePostHashTruthTable()
+        {
+            int output = 0;
+            if (Prehashing) { output += 1; };
+            if (Convert.ToBoolean(Posthashing)) { output += 2; };
+            return output;
+        }
+
         public byte[] KDF(byte[] data, int out_len)
         {
             byte[] hexzero = new byte[] { 0x00 };
             byte[] hexone = new byte[] { 0x01 };
-            int r = Hashfunction.HashSize /8;
+            int r = Hashfunction.HashSize / 8;
             byte[] V = InitialiseCustomByteArray(0x01, r);
             byte[] K = InitialiseCustomByteArray(0x00, r);
             HMAC hashbuffer = Hashfunction;

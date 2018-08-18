@@ -77,6 +77,11 @@ namespace Testing
             int testcounter = 0;
             foreach (Dictionary<string, string> sha256kat in kats.ModSHA256)
             {
+                if(testcounter == 616)
+                {
+                    int d = 1;
+                }
+
                 byte[] input = Tools.HexStringToByteArray(sha256kat["input"]);
                 byte[] salt = Tools.HexStringToByteArray(sha256kat["salt"]);
                 hasher.Prehashing = Convert.ToBoolean(sha256kat["pre-hashing"]);
@@ -93,18 +98,35 @@ namespace Testing
 
                 hasher.Workfactor = 384;
                 byte[] result384 = hasher.Digest(input, n, salt);
-                Assert.AreEqual(digestexpected384, result384);
 
-                hasher.Workfactor = 4096;
-                byte[] result4096 = hasher.Digest(input, n, salt);
-                Assert.AreEqual(digestexpected4096, result384);
-                testcounter++;
-                if (testcounter > 10)
+                if (digestexpected384.SequenceEqual<byte>(result384))
                 {
+                    outcome = true;
+                }
+                else
+                {
+                    outcome = false;
+                    Trace.WriteLine(testcounter);
+                    Trace.WriteLine(hasher.Prehashing);
+                    Trace.WriteLine(hasher.Posthashing);
+                    Trace.WriteLine(sha256kat[ "input"]);
+                    Trace.WriteLine(BitConverter.ToString(result384));
+                    Trace.WriteLine(sha256kat["bin384"]);
+
                     break;
                 }
-                
+
+                //Assert.AreEqual(digestexpected384, result384);
+                //hasher.Workfactor = 4096;
+                //byte[] result4096 = hasher.Digest(input, n, salt);
+                //Assert.AreEqual(digestexpected4096, result384);
+
+                testcounter++;
+
+ 
             }
+
+            Assert.IsTrue(outcome);
         }
 
         public class KnownAnswerTests
