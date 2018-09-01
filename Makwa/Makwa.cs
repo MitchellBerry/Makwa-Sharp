@@ -1,6 +1,5 @@
 ﻿using System;
 using Org.BouncyCastle.Math;
-using System.Collections.Generic;
 using System.Security.Cryptography;
 
 namespace Makwa
@@ -49,9 +48,6 @@ namespace Makwa
                 throw new ArgumentException("invalid integer input");
             }
             return x;
-
-
-
         }
 
         public static string UnpaddedB64(byte[] m)
@@ -165,8 +161,6 @@ namespace Makwa
                 throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
             }
             return Y;
-
-
         }
 
         static BigInteger ModularSquarings(BigInteger v, int wf, BigInteger mod)
@@ -187,22 +181,6 @@ namespace Makwa
             else if (pre && !post)  { output += "r"; }
             else if (!pre && post)  { output += "s"; }
             else                    { output += "b"; }
-
-            //switch (PrePostHashTruthTable())
-            //{
-            //    case 0:
-            //        output += "n";
-            //        break;
-            //    case 1:
-            //        output += "r";
-            //        break;
-            //    case 2:
-            //        output += "s";
-            //        break;
-            //    case 3:
-            //        output += "b";
-            //        break;
-            //}
 
             int delta = 0;
             int w = Workfactor;
@@ -227,15 +205,6 @@ namespace Makwa
             return output;
         }
 
-        //// Returns a value from 0 to 3 based on the pre and post-hashing parameters
-        //public ushort PrePostHashTruthTable()
-        //{
-        //    ushort output = 0;
-        //    if (Prehashing) { output += 1; };
-        //    if (Posthashing > 0) { output += 2; };
-        //    return output;
-        //}
-
         public byte[] KDF(byte[] data, int outLength)
         {
             byte[] hexzero = new byte[] { 0x00 };
@@ -250,17 +219,6 @@ namespace Makwa
             V = hashbuffer.ComputeHash(V);
             hashbuffer.Key = hashbuffer.ComputeHash(ConcatenateByteArrays(V, hexone, data));
             V = hashbuffer.ComputeHash(V);
-
-            //IList<byte> T = new List<byte>();
-            //while (T.Count < outLength)
-            //{
-            //    V = hashbuffer.ComputeHash(V);
-            //    byte[] TBuffer = ConcatenateByteArrays(T.ToArray(), V);
-
-            //    T = TBuffer.ToList();
-            //}
-            //var TOut = T.Take(out_len);
-            //byte[] output = TOut.ToArray();
 
             byte[] T = new byte[0];
             while (T.Length < outLength)
