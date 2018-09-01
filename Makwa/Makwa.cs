@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq;
-//using System.Numerics;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using Org.BouncyCastle.Math;
@@ -112,7 +110,7 @@ namespace Makwa
 
         public string HashPassword(byte[] password, byte[] n, byte[] salt = null)
         {
-            // Salt argument provided for testing, leaving as null is best practice.
+            // Salt argument for unit tests
             if (salt == null)
             {
                 byte[] buffer = new byte[16];

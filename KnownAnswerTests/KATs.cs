@@ -28,7 +28,7 @@ namespace Testing
         {
             if (subsetLength >= 2000)
             {
-                throw new ArgumentOutOfRangeException("MAximum number of KATs available is 2000");
+                throw new ArgumentOutOfRangeException("Maximum number of KATs available is 2000");
             }
             Random rnd = new Random();
             for (int i = 0; i < subsetLength; i++)
@@ -126,12 +126,7 @@ namespace Testing
                 }
                 else
                 {
-                    Trace.WriteLine("Tests Run: " + testcounter);
-                    Trace.WriteLine("Pre: " + hasher.Prehashing);
-                    Trace.WriteLine("Post: " + hasher.Posthashing);
-                    Trace.WriteLine("Input: " + sha256kat["input"]);
-                    Trace.WriteLine("Result: " + BitConverter.ToString(result384));
-                    Trace.WriteLine("Expected bin384: " + sha256kat["bin384"]);
+                    WriteTestTraces(testcounter, sha256kat["input"], sha256kat["bin384"], BitConverter.ToString(result384));
                     outcome = false;
                     break;
                 }
@@ -146,7 +141,7 @@ namespace Testing
         }
 
         [TestMethod]
-        public void TestModSHA512Digest()
+        public void TestModSHA512Digest_WorkFactor384()
         {
             hasher.Hashfunction = new HMACSHA512();
             bool outcome = false;
@@ -181,12 +176,7 @@ namespace Testing
                 }
                 else
                 {
-                    Trace.WriteLine("Tests Run: " + testcounter);
-                    Trace.WriteLine("Pre: " + hasher.Prehashing);
-                    Trace.WriteLine("Post: " + hasher.Posthashing);
-                    Trace.WriteLine("Input: " + sha512kat["input"]);
-                    Trace.WriteLine("Result: " + BitConverter.ToString(result384));
-                    Trace.WriteLine("Expected bin384: " + sha512kat["bin384"]);
+                    WriteTestTraces(testcounter, sha512kat["input"], sha512kat["bin384"], BitConverter.ToString(result384));
                     outcome = false;
                     break;
                 }
@@ -198,6 +188,16 @@ namespace Testing
             }
 
             Assert.IsTrue(outcome);
+        }
+
+        void WriteTestTraces(int testcounter, string input, string expected, string result)
+        {
+            Trace.WriteLine("Tests Run Before Failure: " + testcounter);
+            Trace.WriteLine("Pre: " + hasher.Prehashing);
+            Trace.WriteLine("Post: " + hasher.Posthashing);
+            Trace.WriteLine("Input: " + input);
+            Trace.WriteLine("Result: " + expected);
+            Trace.WriteLine("Expected bin384: " + result);
         }
 
         public class KnownAnswerTests
