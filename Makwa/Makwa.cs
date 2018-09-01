@@ -98,7 +98,18 @@ namespace Makwa
     public class Hasher
     {
         // Enforce attribute ranges, raise errors when out of range
-        public HMAC Hashfunction { get; set; } = new HMACSHA256();
+        public HMAC Hashfunction
+        {
+            get { return this.Hashfunction; }
+            set
+            {
+                if (!(value is HMACSHA256 || value is HMACSHA512))
+                {
+                    throw new ArgumentOutOfRangeException("Hashfunction can only be HMACSHA256 or HMACSHA512");
+                }
+                Hashfunction = value;
+            }
+        }
         public int Workfactor { get; set; } = 4096;
         public bool Prehashing { get; set; } = true;
         public int Posthashing { get; set; } = 12;
