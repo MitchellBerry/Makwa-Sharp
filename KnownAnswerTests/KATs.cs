@@ -130,6 +130,66 @@ namespace Testing
             return outcome;
         }
 
+        bool TestDigest(HMAC hashfuction, int workfactor, List<Dictionary<String, String>> kats)
+        {
+            hasher.Hashfunction = hashfuction;
+            hasher.Workfactor = workfactor;
+            bool outcome = false;
+            int testcounter = 0;
+            foreach (Dictionary<string, string> digestkat in kats)
+            {
+
+                byte[] input = Tools.HexStringToByteArray(digestkat["input"]);
+                byte[] salt = Tools.HexStringToByteArray(digestkat["salt"]);
+                hasher.Prehashing = Convert.ToBoolean(digestkat["pre-hashing"]);
+                if (digestkat["post-hashing"] == "false")
+                {
+                    hasher.Posthashing = 0;
+                }
+                else
+                {
+                    hasher.Posthashing = Convert.ToInt32(digestkat["post-hashing"]);
+                }
+
+
+                //byte[] digestexpected384 = Tools.HexStringToByteArray(digestkat["bin384"]);
+                //byte[] digestexpected4096 = Tools.HexStringToByteArray(digestkat["bin4096"]);
+
+                //switch (workfactor)
+                //{
+                //    case 384:
+                //        public string binstring = "bin384";
+                //        break;
+                //    case 4096:
+                //        binstring = "bin4096";
+                //        break;
+                //}
+                string binstring = "bin" + workfactor;
+
+                byte[] digestexpected = Tools.HexStringToByteArray(digestkat[binstring]);                
+
+                byte[] result = hasher.Digest(input, n, salt);
+                //hasher.Workfactor = 4096;
+                //byte[] result4096 = hasher.Digest2(input, n, salt);
+
+                //if (digestexpected384.SequenceEqual<byte>(result384) && digestexpected4096.SequenceEqual<byte>(result4096))
+
+                if (digestexpected.SequenceEqual<byte>(result))
+                {
+                    outcome = true;
+                }
+                else
+                {
+                    WriteTestTraces(testcounter, digestkat["input"], digestkat["bin384"], BitConverter.ToString(result));
+                    outcome = false;
+                    break;
+                }
+
+                testcounter++;
+            }
+            return outcome;
+        }
+
         [TestMethod]
         public void SHA256DigestWorkFactor384()
         {
