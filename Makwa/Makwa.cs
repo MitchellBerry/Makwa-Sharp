@@ -17,10 +17,12 @@ namespace Makwa
                 byte[] nb = new byte[len];
                 Array.Copy(b, 0, nb, len - blen, blen);
                 return nb;
-            } else if (blen == len)
+            }
+            else if (blen == len)
             {
                 return b;
-            } else
+            }
+            else
             {
                 byte[] nb = new byte[len];
                 Array.Copy(b, blen - len, nb, 0, len);
@@ -44,8 +46,9 @@ namespace Makwa
                 b = nb;
             }
             BigInteger x = new BigInteger(1, b);
-            if (x.CompareTo(modulus) >= 0) {
-                throw new ArgumentException("invalid integer input");
+            if (x.CompareTo(modulus) >= 0)
+            {
+                throw new ArgumentOutOfRangeException("invalid integer input");
             }
             return x;
         }
@@ -71,18 +74,6 @@ namespace Makwa
             return bytes;
         }
 
-        public static bool CheckWorkfactor(uint workfactor)
-        {
-            bool checkthree = IsPowerofTwo(workfactor / 3);
-            bool checktwo = IsPowerofTwo(workfactor / 2);
-            return checkthree || checktwo;
-        }
-
-        static bool IsPowerofTwo(uint x) 
-        {
-            return (x != 0) && ((x & (x - 1)) == 0);
-        }
-
         public static bool ConstantTimeComparison(byte[] a, byte[] b)
         {
             uint diff = (uint)a.Length ^ (uint)b.Length;
@@ -93,26 +84,49 @@ namespace Makwa
             return diff == 0;
         }
 
+        public static bool InvalidWorkfactor(uint workfactor)
+        {
+            bool checkthree = IsPowerofTwo(workfactor / 3);
+            bool checktwo = IsPowerofTwo(workfactor / 2);
+            return (!(checkthree || checktwo));
+        }
+
+        static bool IsPowerofTwo(uint x)
+        {
+            return (x != 0) && ((x & (x - 1)) == 0);
+        }
+
+        public static uint SuggestWorkFactor(uint invalidWorkFactor)
+        {
+            uint[] validWorkFactors = { 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512,
+                768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384, 24576, 32768, 49152,
+                65536, 98304, 131072, 196608, 262144, 393216, 524288, 786432, 1048576, 1572864 };
+            uint[] distances = new uint[validWorkFactors.Length];
+            uint smallestDistance = 1572864;
+            uint closestValidWorkFactor = 1572864;
+            uint distance = new int();
+            for (int i = 0; i < validWorkFactors.Length; i++)
+            {
+                distance = (uint)Math.Abs(validWorkFactors[i] - invalidWorkFactor);
+                if (distance < smallestDistance)
+                {
+                    smallestDistance = distance;
+                    closestValidWorkFactor = validWorkFactors[i];
+                }
+            }
+            return closestValidWorkFactor;
+        }
     }
 
     public class Hasher
     {
         // Enforce attribute ranges, raise errors when out of range
-        public HMAC Hashfunction
-        {
-            get { return this.Hashfunction; }
-            set
-            {
-                if (!(value is HMACSHA256 || value is HMACSHA512))
-                {
-                    throw new ArgumentOutOfRangeException("Hashfunction can only be HMACSHA256 or HMACSHA512");
-                }
-                Hashfunction = value;
-            }
-        }
-        public int Workfactor { get; set; } = 4096;
+        public HMAC Hashfunction { get; set; } = new HMACSHA256();
+        public uint Workfactor { get; set; } = 4096;
         public bool Prehashing { get; set; } = true;
         public int Posthashing { get; set; } = 12;
+
+        
 
         public string HashPassword(byte[] password, byte[] n, byte[] salt = null)
         {
@@ -143,6 +157,12 @@ namespace Makwa
             {
                 throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
             }
+            if (Tools.InvalidWorkfactor(Workfactor))
+                {
+                    uint suggested = Tools.SuggestWorkFactor(Workfactor);
+                    throw new ArgumentOutOfRangeException("Closest valid workfactor: " + suggested + "" +
+                        Environment.NewLine + "Workfactors restricted to  w = ζ · 2^δ, where ζ = 2 or 3, and δ ≥ 0");
+                }
             if (Prehashing)
             {
                 password = KDF(password, 64);
@@ -174,11 +194,12 @@ namespace Makwa
             return Y;
         }
 
-        static BigInteger ModularSquarings(BigInteger v, int wf, BigInteger mod)
+        static BigInteger ModularSquarings(BigInteger v, uint wf, BigInteger mod)
         {
+            BigInteger exp = new BigInteger("2");
             for (int i = 0; i <= wf; i++)
             {
-                v = v.ModPow(new BigInteger("2"), mod);
+                v = v.ModPow(exp, mod);
             }
             return v;
         }
@@ -194,8 +215,8 @@ namespace Makwa
             else                    { output += "b"; }
 
             int delta = 0;
-            int w = Workfactor;
-            int andResult = w & 1;
+            uint w = Workfactor;
+            uint andResult = w & 1;
             while (andResult == 0)
             {
                 delta += 1;
@@ -218,6 +239,10 @@ namespace Makwa
 
         public byte[] KDF(byte[] data, int outLength)
         {
+            if (!(Hashfunction is HMACSHA256 || Hashfunction is HMACSHA512))
+            {
+                throw new ArgumentOutOfRangeException("HashFunction can only be HMACSHA256 or HMACSHA512"); 
+            }
             byte[] hexzero = new byte[] { 0x00 };
             byte[] hexone = new byte[] { 0x01 };
             int r = Hashfunction.HashSize / 8;

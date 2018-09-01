@@ -79,7 +79,7 @@ namespace Testing
             return outcome;
         }
 
-        bool TestDigest(HMAC hashfuction, int workfactor, List<Dictionary<String, String>> kats)
+        bool TestDigest(HMAC hashfuction, uint workfactor, List<Dictionary<String, String>> kats)
         {
             hasher.Hashfunction = hashfuction;
             hasher.Workfactor = workfactor;
@@ -149,7 +149,7 @@ namespace Testing
             Assert.IsTrue(outcome);
         }
 
-        bool TestHashPassword(HMAC hashfunction, int workfactor, List<Dictionary<String, String>> kats)
+        bool TestHashPassword(HMAC hashfunction, uint workfactor, List<Dictionary<String, String>> kats)
         {
             hasher.Hashfunction = hashfunction;
             hasher.Workfactor = workfactor;
