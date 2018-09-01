@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Linq;
+using Org.BouncyCastle.Math;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using Org.BouncyCastle.Math;
 
 namespace Makwa
 {
@@ -237,7 +236,7 @@ namespace Makwa
         //    return output;
         //}
 
-        public byte[] KDF(byte[] data, int out_len)
+        public byte[] KDF(byte[] data, int outLength)
         {
             byte[] hexzero = new byte[] { 0x00 };
             byte[] hexone = new byte[] { 0x01 };
@@ -252,17 +251,26 @@ namespace Makwa
             hashbuffer.Key = hashbuffer.ComputeHash(ConcatenateByteArrays(V, hexone, data));
             V = hashbuffer.ComputeHash(V);
 
-            IList<byte> T = new List<byte>();
-            while (T.Count < out_len)
+            //IList<byte> T = new List<byte>();
+            //while (T.Count < outLength)
+            //{
+            //    V = hashbuffer.ComputeHash(V);
+            //    byte[] TBuffer = ConcatenateByteArrays(T.ToArray(), V);
+
+            //    T = TBuffer.ToList();
+            //}
+            //var TOut = T.Take(out_len);
+            //byte[] output = TOut.ToArray();
+
+            byte[] T = new byte[0];
+            while (T.Length < outLength)
             {
                 V = hashbuffer.ComputeHash(V);
-                byte[] TBuffer = ConcatenateByteArrays(T.ToArray(), V);
+                T = ConcatenateByteArrays(T, V);
 
-                T = TBuffer.ToList();
             }
-            var TOut = T.Take(out_len);
-            byte[] output = TOut.ToArray();
-
+            byte[] output = new byte[outLength];
+            Array.Copy(T, output, outLength);
             return output;
         }
 
@@ -278,8 +286,13 @@ namespace Makwa
 
         public static byte[] ConcatenateByteArrays(params byte[][] arrays)
         {
-            byte[] output = new byte[arrays.Sum(x => x.Length)];
+            int outLength = 0;
             int offset = 0;
+            foreach (byte[] array in arrays)
+            {
+                outLength += array.Length;
+            }
+            byte[] output = new byte[outLength];
             foreach (byte[] data in arrays)
             {
                 Buffer.BlockCopy(data, 0, output, offset, data.Length);
