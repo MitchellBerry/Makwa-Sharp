@@ -115,7 +115,7 @@ namespace Testing
                 byte[] digestexpected4096 = Tools.HexStringToByteArray(sha256kat["bin4096"]);
 
                 hasher.Workfactor = 384;
-                byte[] result384 = hasher.Digest2(input, n, salt);
+                byte[] result384 = hasher.Digest(input, n, salt);
                 //hasher.Workfactor = 4096;
                 //byte[] result4096 = hasher.Digest2(input, n, salt);
 
@@ -170,7 +170,7 @@ namespace Testing
                 byte[] digestexpected4096 = Tools.HexStringToByteArray(sha512kat["bin4096"]);
 
                 hasher.Workfactor = 384;
-                byte[] result384 = hasher.Digest3(input, n, salt);
+                byte[] result384 = hasher.Digest(input, n, salt);
                 //hasher.Workfactor = 4096;
                 //byte[] result4096 = hasher.Digest2(input, n, salt);
 

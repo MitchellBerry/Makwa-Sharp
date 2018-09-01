@@ -10,17 +10,6 @@ namespace Makwa
 {
     public class Tools
     {
-        //public static byte[] I2OSP(byte[] x, int size)
-        //{
-        //    if (BitConverter.IsLittleEndian)
-        //    {
-        //        Array.Reverse(x, 0, x.Length);
-        //    }
-        //    byte[] result = new byte[size];
-        //    Buffer.BlockCopy(x, 0, result, (result.Length - x.Length), x.Length);
-        //    return result;
-        //}
-
 
         public static byte[] I2OSP(BigInteger x, BigInteger modulus)
         {
@@ -138,107 +127,107 @@ namespace Makwa
             string moduluschecksum = Tools.UnpaddedB64(KDF(n, 8));
             string statedata = GetStateData();
             string saltb64 = Tools.UnpaddedB64(salt);
-            byte[] digestresult = Digest3(password, n, salt);
+            byte[] digestresult = Digest(password, n, salt);
             string digestb64 = Tools.UnpaddedB64(digestresult);
             return CreateHashString(moduluschecksum, statedata, saltb64, digestb64);
         }
 
+        //public byte[] Digest(byte[] password, byte[] mod, byte[] salt)
+        //{
+        //    int k = mod.Length;
+        //    if (k < 160)
+        //    {
+        //        throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
+        //    }
+        //    if (Prehashing)
+        //    {
+        //        password = KDF(password, 64);
+        //    }
+        //    int u = password.Length;
+        //    if (u > 255 || u > (k - 32))
+        //    {
+        //        throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
+        //    }
+        //    byte[] ub = new byte[] { (byte)u };
+        //    byte[] sb = KDF(ConcatenateByteArrays(salt, password, ub), k - 2 - u);
+        //    byte[] zerobyte = new byte[] { 0 };
+        //    byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
+        //    string xbhex = BitConverter.ToString(xb).Replace("-", "");
+        //    xbhex = xbhex.Substring(1);
+        //    BigInteger x = new BigInteger(xbhex, 16);
+        //    string modhex = "0" + BitConverter.ToString(mod).Replace("-", "");
+        //    BigInteger n = new BigInteger(modhex, 16);
+        //    BigInteger Y = ModularSquarings(x, Workfactor, n);
+        //    byte[] y = Y.ToByteArray();
+        //    Array.Reverse(y, 0, y.Length);
+
+
+        //    if (y.Length == 257)
+        //    {
+        //        y = y.Skip(1).Take(y.Length).ToArray();
+        //    }
+
+        //    if (Posthashing >= 10)
+        //    {
+        //        y = KDF(y, Posthashing);  
+        //    }
+        //    else if (Posthashing != 0)
+        //    {
+        //        throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
+        //    }
+        //    return y;
+        //}
+
+        //public byte[] Digest2(byte[] password, byte[] mod, byte[] salt)
+        //{
+        //    int k = mod.Length;
+        //    if (k < 160)
+        //    {
+        //        throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
+        //    }
+        //    if (Prehashing)
+        //    {
+        //        password = KDF(password, 64);
+        //    }
+        //    int u = password.Length;
+        //    if (u > 255 || u > (k - 32))
+        //    {
+        //        throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
+        //    }
+        //    byte[] ub = new byte[] { (byte)u };
+        //    byte[] sb = KDF(ConcatenateByteArrays(salt, password, ub), k - 2 - u);
+        //    byte[] zerobyte = new byte[] { 0 };
+        //    byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
+        //    BigInteger x = new BigInteger(1, xb);
+        //    BigInteger n = new BigInteger(1, mod);
+        //    string xhex = x.ToString(16);
+        //    string nhex = n.ToString(16);
+        //    BigInteger Y = ModularSquarings(x, Workfactor, n);
+        //    byte[] y = Y.ToByteArray();
+        //    if (y.Length == 257)
+        //    {
+        //        y = y.Skip(1).Take(y.Length).ToArray();
+        //    }
+
+        //    if (y.Length == 255)
+        //    {
+        //        y = ConcatenateByteArrays(zerobyte, y);
+        //    }
+
+        //    if (Posthashing >= 10)
+        //    {
+        //        y = KDF(y, Posthashing);
+        //    }
+        //    else if (Posthashing != 0)
+        //    {
+        //        throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
+        //    }
+        //    return y;
+
+
+        //}
+
         public byte[] Digest(byte[] password, byte[] mod, byte[] salt)
-        {
-            int k = mod.Length;
-            if (k < 160)
-            {
-                throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
-            }
-            if (Prehashing)
-            {
-                password = KDF(password, 64);
-            }
-            int u = password.Length;
-            if (u > 255 || u > (k - 32))
-            {
-                throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
-            }
-            byte[] ub = new byte[] { (byte)u };
-            byte[] sb = KDF(ConcatenateByteArrays(salt, password, ub), k - 2 - u);
-            byte[] zerobyte = new byte[] { 0 };
-            byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
-            string xbhex = BitConverter.ToString(xb).Replace("-", "");
-            xbhex = xbhex.Substring(1);
-            BigInteger x = new BigInteger(xbhex, 16);
-            string modhex = "0" + BitConverter.ToString(mod).Replace("-", "");
-            BigInteger n = new BigInteger(modhex, 16);
-            BigInteger Y = ModularSquarings(x, Workfactor, n);
-            byte[] y = Y.ToByteArray();
-            Array.Reverse(y, 0, y.Length);
-
-
-            if (y.Length == 257)
-            {
-                y = y.Skip(1).Take(y.Length).ToArray();
-            }
-
-            if (Posthashing >= 10)
-            {
-                y = KDF(y, Posthashing);  
-            }
-            else if (Posthashing != 0)
-            {
-                throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
-            }
-            return y;
-        }
-
-        public byte[] Digest2(byte[] password, byte[] mod, byte[] salt)
-        {
-            int k = mod.Length;
-            if (k < 160)
-            {
-                throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
-            }
-            if (Prehashing)
-            {
-                password = KDF(password, 64);
-            }
-            int u = password.Length;
-            if (u > 255 || u > (k - 32))
-            {
-                throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
-            }
-            byte[] ub = new byte[] { (byte)u };
-            byte[] sb = KDF(ConcatenateByteArrays(salt, password, ub), k - 2 - u);
-            byte[] zerobyte = new byte[] { 0 };
-            byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
-            BigInteger x = new BigInteger(1, xb);
-            BigInteger n = new BigInteger(1, mod);
-            string xhex = x.ToString(16);
-            string nhex = n.ToString(16);
-            BigInteger Y = ModularSquarings(x, Workfactor, n);
-            byte[] y = Y.ToByteArray();
-            if (y.Length == 257)
-            {
-                y = y.Skip(1).Take(y.Length).ToArray();
-            }
-
-            if (y.Length == 255)
-            {
-                y = ConcatenateByteArrays(zerobyte, y);
-            }
-
-            if (Posthashing >= 10)
-            {
-                y = KDF(y, Posthashing);
-            }
-            else if (Posthashing != 0)
-            {
-                throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
-            }
-            return y;
-
-
-        }
-
-        public byte[] Digest3(byte[] password, byte[] mod, byte[] salt)
         {
             int k = mod.Length;
             if (k < 160)
