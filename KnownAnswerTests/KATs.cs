@@ -1,5 +1,6 @@
 ﻿using Makwa;
 using System;
+using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -240,9 +241,7 @@ namespace Testing
         {
             try
             {
-                // Read kat file
-                string[] lines = System.IO.File.ReadAllLines(filepath);
-
+                string[] lines = File.ReadAllLines(filepath);
                 KnownAnswerTests KATs = new KnownAnswerTests();
 
                 // Initialise regexes
@@ -331,9 +330,9 @@ namespace Testing
                 }
                 return KATs;
             }
-            catch (System.IO.FileNotFoundException)
+            catch (FileNotFoundException)
             {
-                throw new System.IO.FileNotFoundException("No KAT file");
+                throw new FileNotFoundException("No KAT file");
             }
         }
     }
