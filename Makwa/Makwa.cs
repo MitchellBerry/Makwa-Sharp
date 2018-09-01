@@ -466,15 +466,5 @@ namespace Makwa
             return string.Join("_", new[] { moduluschecksum, statedata, salt, digest });
         }
     }
-
-    public class Tests
-    {
-        public void GetRegex()
-        {
-            string[] lines = System.IO.File.ReadAllLines(@"kat.txt");
-            //Console.WriteLine(lines.Take(1));
-
-        }
-    }
 }
 

@@ -1,0 +1,1 @@
+<Playlist Version="1.0"><Add Test="Testing.KATs.SHA512HashPassword4096" /><Add Test="Testing.KATs.SHA512DigestWorkFactor4096" /><Add Test="Testing.KATs.SHA256HashPassword4096" /><Add Test="Testing.KATs.SHA256DigestWorkFactor4096" /></Playlist>
