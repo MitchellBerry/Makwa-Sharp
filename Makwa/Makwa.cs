@@ -1,23 +1,71 @@
 ﻿using System;
 using System.Linq;
-using System.Numerics;
-//using System.Globalization;
+//using System.Numerics;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using Org.BouncyCastle.Math;
 
 namespace Makwa
 {
     public class Tools
     {
-        public static byte[] I2OSP(byte[] x, int size)
+        //public static byte[] I2OSP(byte[] x, int size)
+        //{
+        //    if (BitConverter.IsLittleEndian)
+        //    {
+        //        Array.Reverse(x, 0, x.Length);
+        //    }
+        //    byte[] result = new byte[size];
+        //    Buffer.BlockCopy(x, 0, result, (result.Length - x.Length), x.Length);
+        //    return result;
+        //}
+
+
+        public static byte[] I2OSP(BigInteger x, BigInteger modulus)
         {
-            if (BitConverter.IsLittleEndian)
+            int len = (modulus.BitLength + 7) >> 3;
+            byte[] b = x.ToByteArray();
+            int blen = b.Length;
+            if (blen < len)
             {
-                Array.Reverse(x, 0, x.Length);
+                byte[] nb = new byte[len];
+                Array.Copy(b, 0, nb, len - blen, blen);
+                return nb;
+            } else if (blen == len)
+            {
+                return b;
+            } else
+            {
+                byte[] nb = new byte[len];
+                Array.Copy(b, blen - len, nb, 0, len);
+                return nb;
             }
-            byte[] result = new byte[size];
-            Buffer.BlockCopy(x, 0, result, (result.Length - x.Length), x.Length);
-            return result;
+
+        }
+
+        public static BigInteger OS2IP(byte[] b, BigInteger modulus)
+        {
+            int len = (modulus.BitLength + 7) >> 3;
+            int blen = b.Length;
+            if (blen != len)
+            {
+                throw new ArgumentOutOfRangeException("invalid integer input");
+            }
+            if (b[0] < 0)
+            {
+                byte[] nb = new byte[blen + 1];
+                Array.Copy(b, 0, nb, 1, blen);
+                b = nb;
+            }
+            BigInteger x = new BigInteger(1, b);
+            if (x.CompareTo(modulus) >= 0) {
+                throw new ArgumentException("invalid integer input");
+            }
+            return x;
+
+
+
         }
 
         public static string UnpaddedB64(byte[] m)
@@ -41,46 +89,28 @@ namespace Makwa
             return bytes;
         }
 
-        public static bool IsBlumInteger(int n)
+        public static bool CheckWorkfactor(uint workfactor)
         {
-            bool[] prime = new bool[n + 1];
-            for (int i = 0; i < n; i++)
-                prime[i] = true;
-
-            // to store prime numbers from 2 to n
-            for (int i = 2; i * i <= n; i++)
-            {
-
-                // If prime[i] is not changed,
-                // then it is a prime
-                if (prime[i] == true)
-                {
-
-                    // Update all multiples of p
-                    for (int j = i * 2; j <= n; j += i)
-                        prime[j] = false;
-                }
-            }
-
-            // to check if the given odd integer
-            // is Blum Integer or not
-            for (int i = 2; i <= n; i++)
-            {
-                if (prime[i])
-                {
-
-                    // checking the factors are
-                    // of 4t + 3 form or not
-                    if ((n % i == 0) && ((i - 3) % 4) == 0)
-                    {
-                        int q = n / i;
-                        return (q != i && prime[q] &&
-                               (q - 3) % 4 == 0);
-                    }
-                }
-            }
-            return false;
+            bool checkthree = IsPowerofTwo(workfactor / 3);
+            bool checktwo = IsPowerofTwo(workfactor / 2);
+            return checkthree || checktwo;
         }
+
+        static bool IsPowerofTwo(uint x) 
+        {
+            return (x != 0) && ((x & (x - 1)) == 0);
+        }
+
+        public static bool ConstantTimeComparison(byte[] a, byte[] b)
+        {
+            uint diff = (uint)a.Length ^ (uint)b.Length;
+            for (uint i = 0; i < a.Length && i < b.Length; i++)
+            {
+                diff |= (uint)(a[i] ^ b[i]);
+            }
+            return diff == 0;
+        }
+
     }
 
     public class Hasher
@@ -93,7 +123,7 @@ namespace Makwa
 
         public string HashPassword(byte[] password, byte[] n, byte[] salt = null)
         {
-            // Salt variable availabe for unittests, leave null for secure salts
+            // Salt argument provided for testing, leaving as null is best practice.
             if (salt == null)
             {
                 byte[] buffer = new byte[16];
@@ -108,7 +138,7 @@ namespace Makwa
             string moduluschecksum = Tools.UnpaddedB64(KDF(n, 8));
             string statedata = GetStateData();
             string saltb64 = Tools.UnpaddedB64(salt);
-            byte[] digestresult = Digest(password, n, salt);
+            byte[] digestresult = Digest3(password, n, salt);
             string digestb64 = Tools.UnpaddedB64(digestresult);
             return CreateHashString(moduluschecksum, statedata, saltb64, digestb64);
         }
@@ -135,19 +165,13 @@ namespace Makwa
             byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
             string xbhex = BitConverter.ToString(xb).Replace("-", "");
             xbhex = xbhex.Substring(1);
-            BigInteger x = BigInteger.Parse(xbhex, System.Globalization.NumberStyles.HexNumber);
+            BigInteger x = new BigInteger(xbhex, 16);
             string modhex = "0" + BitConverter.ToString(mod).Replace("-", "");
-            BigInteger n = BigInteger.Parse(modhex, System.Globalization.NumberStyles.HexNumber);
+            BigInteger n = new BigInteger(modhex, 16);
             BigInteger Y = ModularSquarings(x, Workfactor, n);
             byte[] y = Y.ToByteArray();
             Array.Reverse(y, 0, y.Length);
 
-            //switch (GetPrePostHashTruthTable())
-            //{
-            //    case 0:
-            //        y = y.Skip(1).Take(y.Length).ToArray();
-            //        break;
-            //}
 
             if (y.Length == 257)
             {
@@ -156,15 +180,102 @@ namespace Makwa
 
             if (Posthashing >= 10)
             {
-                //
-                y = KDF(y, Posthashing);
-                
+                y = KDF(y, Posthashing);  
             }
             else if (Posthashing != 0)
             {
                 throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
             }
             return y;
+        }
+
+        public byte[] Digest2(byte[] password, byte[] mod, byte[] salt)
+        {
+            int k = mod.Length;
+            if (k < 160)
+            {
+                throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
+            }
+            if (Prehashing)
+            {
+                password = KDF(password, 64);
+            }
+            int u = password.Length;
+            if (u > 255 || u > (k - 32))
+            {
+                throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
+            }
+            byte[] ub = new byte[] { (byte)u };
+            byte[] sb = KDF(ConcatenateByteArrays(salt, password, ub), k - 2 - u);
+            byte[] zerobyte = new byte[] { 0 };
+            byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
+            BigInteger x = new BigInteger(1, xb);
+            BigInteger n = new BigInteger(1, mod);
+            string xhex = x.ToString(16);
+            string nhex = n.ToString(16);
+            BigInteger Y = ModularSquarings(x, Workfactor, n);
+            byte[] y = Y.ToByteArray();
+            if (y.Length == 257)
+            {
+                y = y.Skip(1).Take(y.Length).ToArray();
+            }
+
+            if (y.Length == 255)
+            {
+                y = ConcatenateByteArrays(zerobyte, y);
+            }
+
+            if (Posthashing >= 10)
+            {
+                y = KDF(y, Posthashing);
+            }
+            else if (Posthashing != 0)
+            {
+                throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
+            }
+            return y;
+
+
+        }
+
+        public byte[] Digest3(byte[] password, byte[] mod, byte[] salt)
+        {
+            int k = mod.Length;
+            if (k < 160)
+            {
+                throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
+            }
+            if (Prehashing)
+            {
+                password = KDF(password, 64);
+            }
+            int u = password.Length;
+            if (u > 255 || u > (k - 32))
+            {
+                throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
+            }
+            byte[] ub = new byte[] { (byte)u };
+            byte[] sb = KDF(ConcatenateByteArrays(salt, password, ub), k - 2 - u);
+            byte[] zerobyte = new byte[] { 0 };
+            byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
+            BigInteger x = new BigInteger(1, xb);
+            BigInteger n = new BigInteger(1, mod);
+            string xhex = x.ToString(16);
+            string nhex = n.ToString(16);
+            BigInteger y = ModularSquarings(x, Workfactor, n);
+            byte[] Y = Tools.I2OSP(y, n);
+
+            if (Posthashing >= 10)
+            {
+                Y = KDF(Y, Posthashing);
+            }
+            else if (Posthashing != 0)
+            {
+                throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
+            }
+            return Y;
+
+
         }
 
 
@@ -231,10 +342,10 @@ namespace Makwa
         //    {
         //        output = KDF(output, posthashing);
         //    }
-            
+
         //    return output;
         //}
-        
+
         //static BigInteger reversebigint(BigInteger bint)
         //{
         //    byte[] bufferarray = bint.ToByteArray();
@@ -260,7 +371,7 @@ namespace Makwa
         {
             for (int i = 0; i <= wf; i++)
             {
-                v = BigInteger.ModPow(v, 2, mod);
+                v = v.ModPow(new BigInteger("2"), mod);
             }
             return v;
         }

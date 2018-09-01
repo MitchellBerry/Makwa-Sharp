@@ -14,8 +14,30 @@ namespace Testing
     {
         KnownAnswerTests kats = ParseKATFile();
         Hasher hasher = new Hasher();
-        static string nhex = "C22C40BBD056BB213AAD7C830519101AB926AE18E3E9FC9699C806E0AE5C259414A01AC1D52E873EC08046A68E344C8D74A508952842EF0F03F71A6EDC077FAA14899A79F83C3AE136F774FA6EB88F1D1AEA5EA02FC0CCAF96E2CE86F3490F4993B4B566C0079641472DEFC14BECCF48984A7946F1441EA144EA4C802A457550BA3DF0F14C090A75FE9E6A77CF0BE98B71D56251A86943E719D27865A489566C1DC57FCDEFACA6AB043F8E13F6C0BE7B39C92DA86E1D87477A189E73CE8E311D3D51361F8B00249FB3D8435607B14A1E70170F9AF36784110A3F2E67428FC18FB013B30FE6782AECB4428D7C8E354A0FBD061B01917C727ABEE0FE3FD3CEF761";
+        static string nhex = "C22C40BBD056BB213AAD7C830519101AB926AE18E3E9FC9699C806E0AE5C259414A01AC1D5" +
+            "2E873EC08046A68E344C8D74A508952842EF0F03F71A6EDC077FAA14899A79F83C3AE136F774FA6EB88F1D1AEA5" +
+            "EA02FC0CCAF96E2CE86F3490F4993B4B566C0079641472DEFC14BECCF48984A7946F1441EA144EA4C802A457550" +
+            "BA3DF0F14C090A75FE9E6A77CF0BE98B71D56251A86943E719D27865A489566C1DC57FCDEFACA6AB043F8E13F6C" +
+            "0BE7B39C92DA86E1D87477A189E73CE8E311D3D51361F8B00249FB3D8435607B14A1E70170F9AF36784110A3F2E" +
+            "67428FC18FB013B30FE6782AECB4428D7C8E354A0FBD061B01917C727ABEE0FE3FD3CEF761";
         byte[] n = Tools.HexStringToByteArray(nhex);
+
+
+        // Pops out random know answer tests from the list, max number is 1000
+        public KnownAnswerTests RandomKATsSubset(KnownAnswerTests kats, uint subsetLength = 200)
+        {
+            if (subsetLength >= 2000)
+            {
+                throw new ArgumentOutOfRangeException("MAximum number of KATs available is 2000");
+            }
+            Random rnd = new Random();
+            for (int i = 0; i < subsetLength; i++)
+            {
+                kats.ModSHA256.RemoveAt(rnd.Next(kats.ModSHA256.Count));
+                kats.ModSHA512.RemoveAt(rnd.Next(kats.ModSHA512.Count));
+            }
+            return kats;
+        }
 
         [TestMethod]
         public void TestKDF256()
@@ -77,10 +99,6 @@ namespace Testing
             int testcounter = 0;
             foreach (Dictionary<string, string> sha256kat in kats.ModSHA256)
             {
-                if(testcounter == 616)
-                {
-                    int d = 1;
-                }
 
                 byte[] input = Tools.HexStringToByteArray(sha256kat["input"]);
                 byte[] salt = Tools.HexStringToByteArray(sha256kat["salt"]);
@@ -97,33 +115,86 @@ namespace Testing
                 byte[] digestexpected4096 = Tools.HexStringToByteArray(sha256kat["bin4096"]);
 
                 hasher.Workfactor = 384;
-                byte[] result384 = hasher.Digest(input, n, salt);
+                byte[] result384 = hasher.Digest2(input, n, salt);
+                //hasher.Workfactor = 4096;
+                //byte[] result4096 = hasher.Digest2(input, n, salt);
 
+                //if (digestexpected384.SequenceEqual<byte>(result384) && digestexpected4096.SequenceEqual<byte>(result4096))
                 if (digestexpected384.SequenceEqual<byte>(result384))
                 {
                     outcome = true;
                 }
                 else
                 {
+                    Trace.WriteLine("Tests Run: " + testcounter);
+                    Trace.WriteLine("Pre: " + hasher.Prehashing);
+                    Trace.WriteLine("Post: " + hasher.Posthashing);
+                    Trace.WriteLine("Input: " + sha256kat["input"]);
+                    Trace.WriteLine("Result: " + BitConverter.ToString(result384));
+                    Trace.WriteLine("Expected bin384: " + sha256kat["bin384"]);
                     outcome = false;
-                    Trace.WriteLine(testcounter);
-                    Trace.WriteLine(hasher.Prehashing);
-                    Trace.WriteLine(hasher.Posthashing);
-                    Trace.WriteLine(sha256kat[ "input"]);
-                    Trace.WriteLine(BitConverter.ToString(result384));
-                    Trace.WriteLine(sha256kat["bin384"]);
-
                     break;
                 }
 
-                //Assert.AreEqual(digestexpected384, result384);
+                testcounter++;
+
+                //if (testcounter == 100) { break; }
+ 
+            }
+
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void TestModSHA512Digest()
+        {
+            hasher.Hashfunction = new HMACSHA512();
+            bool outcome = false;
+            int testcounter = 0;
+            foreach (Dictionary<string, string> sha512kat in kats.ModSHA512)
+            {
+
+                byte[] input = Tools.HexStringToByteArray(sha512kat["input"]);
+                byte[] salt = Tools.HexStringToByteArray(sha512kat["salt"]);
+                hasher.Prehashing = Convert.ToBoolean(sha512kat["pre-hashing"]);
+                if (sha512kat["post-hashing"] == "false")
+                {
+                    hasher.Posthashing = 0;
+                }
+                else
+                {
+                    hasher.Posthashing = Convert.ToInt32(sha512kat["post-hashing"]);
+                }
+
+                byte[] digestexpected384 = Tools.HexStringToByteArray(sha512kat["bin384"]);
+                byte[] digestexpected4096 = Tools.HexStringToByteArray(sha512kat["bin4096"]);
+
+                hasher.Workfactor = 384;
+                byte[] result384 = hasher.Digest3(input, n, salt);
                 //hasher.Workfactor = 4096;
-                //byte[] result4096 = hasher.Digest(input, n, salt);
-                //Assert.AreEqual(digestexpected4096, result384);
+                //byte[] result4096 = hasher.Digest2(input, n, salt);
+
+                //if (digestexpected384.SequenceEqual<byte>(result384) && digestexpected4096.SequenceEqual<byte>(result4096))
+                if (digestexpected384.SequenceEqual<byte>(result384))
+                {
+                    outcome = true;
+                }
+                else
+                {
+                    Trace.WriteLine("Tests Run: " + testcounter);
+                    Trace.WriteLine("Pre: " + hasher.Prehashing);
+                    Trace.WriteLine("Post: " + hasher.Posthashing);
+                    Trace.WriteLine("Input: " + sha512kat["input"]);
+                    Trace.WriteLine("Result: " + BitConverter.ToString(result384));
+                    Trace.WriteLine("Expected bin384: " + sha512kat["bin384"]);
+                    outcome = false;
+                    break;
+                }
 
                 testcounter++;
 
- 
+                //if (testcounter == 100) { break; }
+
             }
 
             Assert.IsTrue(outcome);
