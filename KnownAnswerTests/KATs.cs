@@ -39,42 +39,81 @@ namespace Testing
             return kats;
         }
 
+        //[TestMethod]
+        //public void TestKDF256()
+        //{
+        //    //hasher.Hashfunction = new HMACSHA256();
+        //    bool outcome = false;
+        //    int testcounter = 0;
+        //    foreach (Dictionary<string,string> kdf256kat in kats.KDF256)
+        //    {
+        //        string expected = kdf256kat["output"];
+        //        byte[] inputbytes = Tools.HexStringToByteArray(kdf256kat["input"]);
+        //        string result = BitConverter.ToString(hasher.KDF(inputbytes, 100)).Replace("-","");
+        //        if (expected == result.ToLower())
+        //        {
+        //            outcome = true;
+        //            testcounter++;
+        //        }
+        //        else
+        //        {
+        //            outcome = false;
+        //            break;
+        //        }
+        //    }
+        //    Trace.WriteLine(testcounter + " SHA256 KDF Known Answer Tests passed");
+        //    Assert.IsTrue(outcome);
+        //}
+        
+        //[TestMethod]
+        //public void TestKDF512()
+        //{
+        //    hasher.Hashfunction = new HMACSHA512();
+        //    bool outcome = false;
+        //    int testcounter = 0;
+        //    foreach (Dictionary<string, string> kdf512kat in kats.KDF512)
+        //    {
+        //        string expected = kdf512kat["output"];
+        //        byte[] inputbytes = Tools.HexStringToByteArray(kdf512kat["input"]);
+        //        string result = BitConverter.ToString(hasher.KDF(inputbytes, 100)).Replace("-", "");
+        //        if (expected == result.ToLower())
+        //        {
+        //            outcome = true;
+        //            testcounter++;
+        //        }
+        //        else
+        //        {
+        //            outcome = false;
+        //            break;
+        //        }
+        //    }
+        //    Trace.WriteLine(testcounter + " SHA512 KDF Known Answer Tests passed");
+        //    Assert.IsTrue(outcome);
+        //}
+
         [TestMethod]
-        public void TestKDF256()
+        void TestKDF256()
         {
-            //hasher.Hashfunction = new HMACSHA256();
-            bool outcome = false;
-            int testcounter = 0;
-            foreach (Dictionary<string,string> kdf256kat in kats.KDF256)
-            {
-                string expected = kdf256kat["output"];
-                byte[] inputbytes = Tools.HexStringToByteArray(kdf256kat["input"]);
-                string result = BitConverter.ToString(hasher.KDF(inputbytes, 100)).Replace("-","");
-                if (expected == result.ToLower())
-                {
-                    outcome = true;
-                    testcounter++;
-                }
-                else
-                {
-                    outcome = false;
-                    break;
-                }
-            }
-            Trace.WriteLine(testcounter + " SHA256 KDF Known Answer Tests passed");
+            bool outcome = TestKDF(new HMACSHA256(), kats.KDF256);
             Assert.IsTrue(outcome);
         }
-        
+
         [TestMethod]
-        public void TestKDF512()
+        void TestKDF512()
         {
-            hasher.Hashfunction = new HMACSHA512();
+            bool outcome = TestKDF(new HMACSHA512(), kats.KDF512);
+            Assert.IsTrue(outcome);
+        }
+
+        bool TestKDF(HMAC hashfunction, List<Dictionary<String, String>> kats)
+        {
+            hasher.Hashfunction = hashfunction;
             bool outcome = false;
             int testcounter = 0;
-            foreach (Dictionary<string, string> kdf512kat in kats.KDF512)
+            foreach (Dictionary<string, string> kdfkat in kats)
             {
-                string expected = kdf512kat["output"];
-                byte[] inputbytes = Tools.HexStringToByteArray(kdf512kat["input"]);
+                string expected = kdfkat["output"];
+                byte[] inputbytes = Tools.HexStringToByteArray(kdfkat["input"]);
                 string result = BitConverter.ToString(hasher.KDF(inputbytes, 100)).Replace("-", "");
                 if (expected == result.ToLower())
                 {
@@ -87,12 +126,12 @@ namespace Testing
                     break;
                 }
             }
-            Trace.WriteLine(testcounter + " SHA512 KDF Known Answer Tests passed");
-            Assert.IsTrue(outcome);
+            Trace.WriteLine(testcounter + " KDF Known Answer Tests passed");
+            return outcome;
         }
 
         [TestMethod]
-        public void TestModSHA256Digest()
+        public void SHA256DigestWorkFactor384()
         {
             hasher.Hashfunction = new HMACSHA256();
             bool outcome = false;
@@ -133,7 +172,7 @@ namespace Testing
 
                 testcounter++;
 
-                //if (testcounter == 100) { break; }
+                if (testcounter == 100) { break; }
  
             }
 
@@ -141,7 +180,7 @@ namespace Testing
         }
 
         [TestMethod]
-        public void TestModSHA512Digest_WorkFactor384()
+        public void SHA512DigestWorkFactor384()
         {
             hasher.Hashfunction = new HMACSHA512();
             bool outcome = false;
@@ -183,7 +222,7 @@ namespace Testing
 
                 testcounter++;
 
-                //if (testcounter == 100) { break; }
+                if (testcounter == 100) { break; }
 
             }
 
