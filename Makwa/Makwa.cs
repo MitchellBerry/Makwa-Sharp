@@ -120,7 +120,6 @@ namespace Makwa
 
     public class Hasher
     {
-        // Enforce attribute ranges, raise errors when out of range
         public HMAC Hashfunction { get; set; } = new HMACSHA256();
         public uint Workfactor { get; set; } = 4096;
         public bool Prehashing { get; set; } = true;
@@ -130,7 +129,6 @@ namespace Makwa
 
         public string HashPassword(byte[] password, byte[] n, byte[] salt = null)
         {
-            // Salt argument for unit tests
             if (salt == null)
             {
                 byte[] buffer = new byte[16];
@@ -213,7 +211,6 @@ namespace Makwa
             else if (pre && !post)  { output += "r"; }
             else if (!pre && post)  { output += "s"; }
             else                    { output += "b"; }
-
             int delta = 0;
             uint w = Workfactor;
             uint andResult = w & 1;
@@ -223,7 +220,6 @@ namespace Makwa
                 w /= 2;
                 andResult = w & 1;
             }
-
             if (w == 1)
             {
                 output += "2";
@@ -255,13 +251,11 @@ namespace Makwa
             V = hashbuffer.ComputeHash(V);
             hashbuffer.Key = hashbuffer.ComputeHash(ConcatenateByteArrays(V, hexone, data));
             V = hashbuffer.ComputeHash(V);
-
             byte[] T = new byte[0];
             while (T.Length < outLength)
             {
                 V = hashbuffer.ComputeHash(V);
                 T = ConcatenateByteArrays(T, V);
-
             }
             byte[] output = new byte[outLength];
             Array.Copy(T, output, outLength);
