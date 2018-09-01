@@ -130,101 +130,6 @@ namespace Makwa
             return CreateHashString(moduluschecksum, statedata, saltb64, digestb64);
         }
 
-        //public byte[] Digest(byte[] password, byte[] mod, byte[] salt)
-        //{
-        //    int k = mod.Length;
-        //    if (k < 160)
-        //    {
-        //        throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
-        //    }
-        //    if (Prehashing)
-        //    {
-        //        password = KDF(password, 64);
-        //    }
-        //    int u = password.Length;
-        //    if (u > 255 || u > (k - 32))
-        //    {
-        //        throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
-        //    }
-        //    byte[] ub = new byte[] { (byte)u };
-        //    byte[] sb = KDF(ConcatenateByteArrays(salt, password, ub), k - 2 - u);
-        //    byte[] zerobyte = new byte[] { 0 };
-        //    byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
-        //    string xbhex = BitConverter.ToString(xb).Replace("-", "");
-        //    xbhex = xbhex.Substring(1);
-        //    BigInteger x = new BigInteger(xbhex, 16);
-        //    string modhex = "0" + BitConverter.ToString(mod).Replace("-", "");
-        //    BigInteger n = new BigInteger(modhex, 16);
-        //    BigInteger Y = ModularSquarings(x, Workfactor, n);
-        //    byte[] y = Y.ToByteArray();
-        //    Array.Reverse(y, 0, y.Length);
-
-
-        //    if (y.Length == 257)
-        //    {
-        //        y = y.Skip(1).Take(y.Length).ToArray();
-        //    }
-
-        //    if (Posthashing >= 10)
-        //    {
-        //        y = KDF(y, Posthashing);  
-        //    }
-        //    else if (Posthashing != 0)
-        //    {
-        //        throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
-        //    }
-        //    return y;
-        //}
-
-        //public byte[] Digest2(byte[] password, byte[] mod, byte[] salt)
-        //{
-        //    int k = mod.Length;
-        //    if (k < 160)
-        //    {
-        //        throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
-        //    }
-        //    if (Prehashing)
-        //    {
-        //        password = KDF(password, 64);
-        //    }
-        //    int u = password.Length;
-        //    if (u > 255 || u > (k - 32))
-        //    {
-        //        throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
-        //    }
-        //    byte[] ub = new byte[] { (byte)u };
-        //    byte[] sb = KDF(ConcatenateByteArrays(salt, password, ub), k - 2 - u);
-        //    byte[] zerobyte = new byte[] { 0 };
-        //    byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
-        //    BigInteger x = new BigInteger(1, xb);
-        //    BigInteger n = new BigInteger(1, mod);
-        //    string xhex = x.ToString(16);
-        //    string nhex = n.ToString(16);
-        //    BigInteger Y = ModularSquarings(x, Workfactor, n);
-        //    byte[] y = Y.ToByteArray();
-        //    if (y.Length == 257)
-        //    {
-        //        y = y.Skip(1).Take(y.Length).ToArray();
-        //    }
-
-        //    if (y.Length == 255)
-        //    {
-        //        y = ConcatenateByteArrays(zerobyte, y);
-        //    }
-
-        //    if (Posthashing >= 10)
-        //    {
-        //        y = KDF(y, Posthashing);
-        //    }
-        //    else if (Posthashing != 0)
-        //    {
-        //        throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
-        //    }
-        //    return y;
-
-
-        //}
-
         public byte[] Digest(byte[] password, byte[] mod, byte[] salt)
         {
             int k = mod.Length;
@@ -265,95 +170,6 @@ namespace Makwa
 
         }
 
-
-        //public byte[] Digest(byte[] password, BigInteger mod, byte[] salt)
-        //{
-        //    //BigInteger n = Helpers.SimpleB2BI(Helpers.SimpleBI2B(mod));
-
-        //    byte[] nInput = mod.ToByteArray();
-        //    Array.Reverse(nInput, 0, nInput.Length);
-        //    BigInteger n = new BigInteger(CombineByteArrays(new byte[] { 0 }, nInput));
-        //    string nhex = n.ToString("X"); 
-        //    int k = n.ToByteArray().Length;
-        //    if (k < 160)
-        //    {
-        //        //raise error: Modulus must be greater than 160 bytes
-        //        throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
-        //    }
-        //    if (prehashing)
-        //    {
-        //        password = KDF(password, 64);
-        //    }
-        //    int u = password.Length;
-        //    if (u > 255 || u > (k - 32))
-        //    {
-        //        // raise error: Password is too long to be hashed with these parameters
-        //        throw new ArgumentOutOfRangeException("Password is too long to be hashed with these parameters");
-        //    }
-
-        //    //byte[] byteu = BitConverter.GetBytes(u);
-        //    byte[] byteu = Helpers.int_to_bytes((ulong)u, 1);
-        //    byte[] ubytes = BitConverter.GetBytes(u);
-
-        //    byte[] sbinput = CombineByteArrays(salt, password, byteu);
-        //    byte[] sb = KDF(sbinput, k - 2 - u);
-
-        //    byte[] initialzero = new byte[] { 0 };
-        //    byte[] xb = initialzero.Concat(sb).Concat(password).Concat(byteu).ToArray();
-        //    string xbhex = BitConverter.ToString(xb).Replace("-", "");
-        //    //Array.Reverse(xb, 0, xb.Length);
-
-        //    BigInteger x = new BigInteger(Helpers.I2OSP(xb, xb.Length));
-        //    string xstring = "0" + x.ToString("X");
-        //    BigInteger x2 = BigInteger.Parse("0" + xbhex, System.Globalization.NumberStyles.HexNumber);
-        //    string xhexpre = x.ToString("X");
-        //    string xhexpre2 = x2.ToString("X");
-
-        //    BigInteger y = new BigInteger(xb);
-
-        //    BigInteger n2 = new BigInteger(CombineByteArrays(initialzero, Helpers.OS2IP(n.ToByteArray())));
-
-        //    //BigInteger x2 = reversebigint(x);
-        //    BigInteger n3 = reversebigint(n2);
-
-        //    BigInteger xModPow = ModPow2(x, workfactor, n3);
-
-
-
-        //    string xhex = xModPow.ToString("X");
-        //    //int moduluslength = xb.Length;
-        //    byte[] ModPowBytes = xModPow.ToByteArray().Skip(1).ToArray();
-        //    byte[] output = Helpers.I2OSP(ModPowBytes, k);
-
-        //    if (posthashing > 0)
-        //    {
-        //        output = KDF(output, posthashing);
-        //    }
-
-        //    return output;
-        //}
-
-        //static BigInteger reversebigint(BigInteger bint)
-        //{
-        //    byte[] bufferarray = bint.ToByteArray();
-        //    Array.Reverse(bufferarray, 0, bufferarray.Length);
-        //    return new BigInteger(bufferarray);
-        //}
-
-
-        //static BigInteger ModPow(BigInteger v, int wf, BigInteger mod)
-        //{
-        //    int step = v.ToByteArray().Length * 8;
-        //    while(wf > 0)
-        //    {
-        //        int z = Math.Min(wf, step);
-        //        v = BigInteger.ModPow(v, v << z, mod);
-        //        string vhex = v.ToString("X");
-        //        wf -= z;
-        //    }
-        //    return v;
-        //}
-
         static BigInteger ModularSquarings(BigInteger v, int wf, BigInteger mod)
         {
             for (int i = 0; i <= wf; i++)
@@ -367,18 +183,28 @@ namespace Makwa
         {
             string output = "";
             bool pre = Prehashing;
-            bool post = Convert.ToBoolean(Posthashing);
-            // TODO: Convert bools to 2 bit binary and use switch case
-            if (!pre && !post) { output += "n"; }
-            else
-            {
-                if (pre && !post) { output += "r"; }
-                else
-                {
-                    if (!pre && post) { output += "s"; }
-                    else { output += "b"; }
-                }
-            }
+            bool post = Posthashing > 0;
+            if (!pre && !post)      { output += "n"; }
+            else if (pre && !post)  { output += "r"; }
+            else if (!pre && post)  { output += "s"; }
+            else                    { output += "b"; }
+
+            //switch (PrePostHashTruthTable())
+            //{
+            //    case 0:
+            //        output += "n";
+            //        break;
+            //    case 1:
+            //        output += "r";
+            //        break;
+            //    case 2:
+            //        output += "s";
+            //        break;
+            //    case 3:
+            //        output += "b";
+            //        break;
+            //}
+
             int delta = 0;
             int w = Workfactor;
             int andResult = w & 1;
@@ -402,13 +228,14 @@ namespace Makwa
             return output;
         }
 
-        public int GetPrePostHashTruthTable()
-        {
-            int output = 0;
-            if (Prehashing) { output += 1; };
-            if (Convert.ToBoolean(Posthashing)) { output += 2; };
-            return output;
-        }
+        //// Returns a value from 0 to 3 based on the pre and post-hashing parameters
+        //public ushort PrePostHashTruthTable()
+        //{
+        //    ushort output = 0;
+        //    if (Prehashing) { output += 1; };
+        //    if (Posthashing > 0) { output += 2; };
+        //    return output;
+        //}
 
         public byte[] KDF(byte[] data, int out_len)
         {
