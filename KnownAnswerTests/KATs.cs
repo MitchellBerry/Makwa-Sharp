@@ -39,67 +39,15 @@ namespace Testing
             return kats;
         }
 
-        //[TestMethod]
-        //public void TestKDF256()
-        //{
-        //    //hasher.Hashfunction = new HMACSHA256();
-        //    bool outcome = false;
-        //    int testcounter = 0;
-        //    foreach (Dictionary<string,string> kdf256kat in kats.KDF256)
-        //    {
-        //        string expected = kdf256kat["output"];
-        //        byte[] inputbytes = Tools.HexStringToByteArray(kdf256kat["input"]);
-        //        string result = BitConverter.ToString(hasher.KDF(inputbytes, 100)).Replace("-","");
-        //        if (expected == result.ToLower())
-        //        {
-        //            outcome = true;
-        //            testcounter++;
-        //        }
-        //        else
-        //        {
-        //            outcome = false;
-        //            break;
-        //        }
-        //    }
-        //    Trace.WriteLine(testcounter + " SHA256 KDF Known Answer Tests passed");
-        //    Assert.IsTrue(outcome);
-        //}
-        
-        //[TestMethod]
-        //public void TestKDF512()
-        //{
-        //    hasher.Hashfunction = new HMACSHA512();
-        //    bool outcome = false;
-        //    int testcounter = 0;
-        //    foreach (Dictionary<string, string> kdf512kat in kats.KDF512)
-        //    {
-        //        string expected = kdf512kat["output"];
-        //        byte[] inputbytes = Tools.HexStringToByteArray(kdf512kat["input"]);
-        //        string result = BitConverter.ToString(hasher.KDF(inputbytes, 100)).Replace("-", "");
-        //        if (expected == result.ToLower())
-        //        {
-        //            outcome = true;
-        //            testcounter++;
-        //        }
-        //        else
-        //        {
-        //            outcome = false;
-        //            break;
-        //        }
-        //    }
-        //    Trace.WriteLine(testcounter + " SHA512 KDF Known Answer Tests passed");
-        //    Assert.IsTrue(outcome);
-        //}
-
         [TestMethod]
-        void TestKDF256()
+        public void TestKDF256()
         {
             bool outcome = TestKDF(new HMACSHA256(), kats.KDF256);
             Assert.IsTrue(outcome);
         }
 
         [TestMethod]
-        void TestKDF512()
+        public void TestKDF512()
         {
             bool outcome = TestKDF(new HMACSHA512(), kats.KDF512);
             Assert.IsTrue(outcome);
@@ -151,28 +99,9 @@ namespace Testing
                     hasher.Posthashing = Convert.ToInt32(digestkat["post-hashing"]);
                 }
 
-
-                //byte[] digestexpected384 = Tools.HexStringToByteArray(digestkat["bin384"]);
-                //byte[] digestexpected4096 = Tools.HexStringToByteArray(digestkat["bin4096"]);
-
-                //switch (workfactor)
-                //{
-                //    case 384:
-                //        public string binstring = "bin384";
-                //        break;
-                //    case 4096:
-                //        binstring = "bin4096";
-                //        break;
-                //}
                 string binstring = "bin" + workfactor;
-
                 byte[] digestexpected = Tools.HexStringToByteArray(digestkat[binstring]);                
-
                 byte[] result = hasher.Digest(input, n, salt);
-                //hasher.Workfactor = 4096;
-                //byte[] result4096 = hasher.Digest2(input, n, salt);
-
-                //if (digestexpected384.SequenceEqual<byte>(result384) && digestexpected4096.SequenceEqual<byte>(result4096))
 
                 if (digestexpected.SequenceEqual<byte>(result))
                 {
@@ -184,8 +113,9 @@ namespace Testing
                     outcome = false;
                     break;
                 }
-
                 testcounter++;
+
+                if (testcounter > 100) { break; }
             }
             return outcome;
         }
@@ -193,99 +123,98 @@ namespace Testing
         [TestMethod]
         public void SHA256DigestWorkFactor384()
         {
-            hasher.Hashfunction = new HMACSHA256();
-            bool outcome = false;
-            int testcounter = 0;
-            foreach (Dictionary<string, string> sha256kat in kats.ModSHA256)
-            {
+            bool outcome = TestDigest(new HMACSHA256(), 384, kats.ModSHA256);
+            Assert.IsTrue(outcome);
+        }
 
-                byte[] input = Tools.HexStringToByteArray(sha256kat["input"]);
-                byte[] salt = Tools.HexStringToByteArray(sha256kat["salt"]);
-                hasher.Prehashing = Convert.ToBoolean(sha256kat["pre-hashing"]);
-                if (sha256kat["post-hashing"] == "false")
-                {
-                    hasher.Posthashing = 0;
-                }
-                else
-                {
-                    hasher.Posthashing = Convert.ToInt32(sha256kat["post-hashing"]);
-                }
-                byte[] digestexpected384 = Tools.HexStringToByteArray(sha256kat["bin384"]);
-                byte[] digestexpected4096 = Tools.HexStringToByteArray(sha256kat["bin4096"]);
-
-                hasher.Workfactor = 384;
-                byte[] result384 = hasher.Digest(input, n, salt);
-                //hasher.Workfactor = 4096;
-                //byte[] result4096 = hasher.Digest2(input, n, salt);
-
-                //if (digestexpected384.SequenceEqual<byte>(result384) && digestexpected4096.SequenceEqual<byte>(result4096))
-                if (digestexpected384.SequenceEqual<byte>(result384))
-                {
-                    outcome = true;
-                }
-                else
-                {
-                    WriteTestTraces(testcounter, sha256kat["input"], sha256kat["bin384"], BitConverter.ToString(result384));
-                    outcome = false;
-                    break;
-                }
-
-                testcounter++;
-
-                if (testcounter == 100) { break; }
- 
-            }
-
+        [TestMethod]
+        public void SHA256DigestWorkFactor4096()
+        {
+            bool outcome = TestDigest(new HMACSHA256(), 4096, kats.ModSHA256);
             Assert.IsTrue(outcome);
         }
 
         [TestMethod]
         public void SHA512DigestWorkFactor384()
         {
-            hasher.Hashfunction = new HMACSHA512();
+            bool outcome = TestDigest(new HMACSHA512(), 384, kats.ModSHA512);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA512DigestWorkFactor4096()
+        {
+            bool outcome = TestDigest(new HMACSHA512(), 4096, kats.ModSHA512);
+            Assert.IsTrue(outcome);
+        }
+
+        bool TestHashPassword(HMAC hashfunction, int workfactor, List<Dictionary<String, String>> kats)
+        {
+            hasher.Hashfunction = hashfunction;
+            hasher.Workfactor = workfactor;
             bool outcome = false;
             int testcounter = 0;
-            foreach (Dictionary<string, string> sha512kat in kats.ModSHA512)
+            foreach (Dictionary<string, string> digestkat in kats)
             {
 
-                byte[] input = Tools.HexStringToByteArray(sha512kat["input"]);
-                byte[] salt = Tools.HexStringToByteArray(sha512kat["salt"]);
-                hasher.Prehashing = Convert.ToBoolean(sha512kat["pre-hashing"]);
-                if (sha512kat["post-hashing"] == "false")
+                byte[] input = Tools.HexStringToByteArray(digestkat["input"]);
+                byte[] salt = Tools.HexStringToByteArray(digestkat["salt"]);
+                hasher.Prehashing = Convert.ToBoolean(digestkat["pre-hashing"]);
+                if (digestkat["post-hashing"] == "false")
                 {
                     hasher.Posthashing = 0;
                 }
                 else
                 {
-                    hasher.Posthashing = Convert.ToInt32(sha512kat["post-hashing"]);
+                    hasher.Posthashing = Convert.ToInt32(digestkat["post-hashing"]);
                 }
 
-                byte[] digestexpected384 = Tools.HexStringToByteArray(sha512kat["bin384"]);
-                byte[] digestexpected4096 = Tools.HexStringToByteArray(sha512kat["bin4096"]);
+                string stringoutput = "str" + workfactor;
+                string digestexpected = digestkat[stringoutput];
+                string result = hasher.HashPassword(input, n, salt);
 
-                hasher.Workfactor = 384;
-                byte[] result384 = hasher.Digest(input, n, salt);
-                //hasher.Workfactor = 4096;
-                //byte[] result4096 = hasher.Digest2(input, n, salt);
-
-                //if (digestexpected384.SequenceEqual<byte>(result384) && digestexpected4096.SequenceEqual<byte>(result4096))
-                if (digestexpected384.SequenceEqual<byte>(result384))
+                if (digestexpected == result)
                 {
                     outcome = true;
                 }
                 else
                 {
-                    WriteTestTraces(testcounter, sha512kat["input"], sha512kat["bin384"], BitConverter.ToString(result384));
+                    WriteTestTraces(testcounter, digestkat["input"], digestkat["bin384"], result);
                     outcome = false;
                     break;
                 }
-
                 testcounter++;
 
-                if (testcounter == 100) { break; }
-
+                if (testcounter > 100) { break; }
             }
+            return outcome;
+        }
 
+        [TestMethod]
+        public void SHA256HashPassword384()
+        {
+            bool outcome = TestHashPassword(new HMACSHA256(), 384, kats.ModSHA256);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA256HashPassword4096()
+        {
+            bool outcome = TestHashPassword(new HMACSHA256(), 4096, kats.ModSHA256);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA512HashPassword384()
+        {
+            bool outcome = TestHashPassword(new HMACSHA512(), 384, kats.ModSHA512);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA512HashPassword4096()
+        {
+            bool outcome = TestHashPassword(new HMACSHA512(), 4096, kats.ModSHA512);
             Assert.IsTrue(outcome);
         }
 
