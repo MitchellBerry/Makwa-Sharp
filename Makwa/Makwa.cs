@@ -53,12 +53,12 @@ namespace Makwa
             return x;
         }
 
-        public static string UnpaddedB64(byte[] m)
+        public static string EncodeUnpaddedBase64(byte[] m)
         {
             return Convert.ToBase64String(m).Replace("=", "");
         }
 
-        public static byte[] Unbase64(string m)
+        public static byte[] DecodeUnpaddedBase64(string m)
         {
             int len = ((4 - (m.Length % 4) % 4));
             string padding = new string('=', len);
@@ -140,11 +140,11 @@ namespace Makwa
             {
                 throw new ArgumentOutOfRangeException("Salt must be 16 bytes long");
             }
-            string moduluschecksum = Tools.UnpaddedB64(KDF(n, 8));
+            string moduluschecksum = Tools.EncodeUnpaddedBase64(KDF(n, 8));
             string statedata = GetStateData();
-            string saltb64 = Tools.UnpaddedB64(salt);
+            string saltb64 = Tools.EncodeUnpaddedBase64(salt);
             byte[] digestresult = Digest(password, n, salt);
-            string digestb64 = Tools.UnpaddedB64(digestresult);
+            string digestb64 = Tools.EncodeUnpaddedBase64(digestresult);
             return CreateHashString(moduluschecksum, statedata, saltb64, digestb64);
         }
 
