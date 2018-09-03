@@ -37,7 +37,7 @@ namespace Makwa
             int blen = b.Length;
             if (blen != len)
             {
-                throw new ArgumentOutOfRangeException("invalid integer input");
+                throw new ArgumentOutOfRangeException("Invalid integer input");
             }
             if (b[0] < 0)
             {
@@ -48,7 +48,7 @@ namespace Makwa
             BigInteger x = new BigInteger(1, b);
             if (x.CompareTo(modulus) >= 0)
             {
-                throw new ArgumentOutOfRangeException("invalid integer input");
+                throw new ArgumentOutOfRangeException("Invalid integer input");
             }
             return x;
         }
@@ -123,9 +123,10 @@ namespace Makwa
         public HMAC Hashfunction { get; set; } = new HMACSHA256();
         public uint Workfactor { get; set; } = 4096;
         public bool Prehashing { get; set; } = true;
-        public int Posthashing { get; set; } = 12;
+        public ushort Posthashing { get; set; } = 12;
 
         
+        //public string HashPassword(string password, )
 
         public string HashPassword(byte[] password, byte[] n, byte[] salt = null)
         {
