@@ -3,7 +3,7 @@ using System.IO;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
 
-namespace makwa
+namespace Makwa
 {
     public class MakwaPrivateKey
     {

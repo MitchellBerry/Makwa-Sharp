@@ -9,6 +9,7 @@ using CommandLine;
 using CommandLine.Text;
 using System.Collections.Generic;
 
+
 namespace CLI
 {
     class Program
@@ -24,6 +25,7 @@ namespace CLI
 
         static void Main()
         {
+            
             //string[] args = new string[]{ "password with space", "-w", "1024", "-l", "12" };
             string[] args = Console.ReadLine().Split();
             //string[] args = new string[] { "-r0" };
@@ -63,7 +65,7 @@ namespace CLI
 
     class Options
     {
-        [Value(0, MetaName = "Password", HelpText = "Password to be hashed", Required =True)]
+        [Value(0, MetaName = "Password", HelpText = "Password to be hashed", Required =true)]
         public string Password { get; set; }
 
 

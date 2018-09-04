@@ -2,7 +2,7 @@
 using System.IO;
 using Org.BouncyCastle.Math;
 
-namespace makwa
+namespace Makwa
 {
 	internal sealed class MakwaIO
 	{
