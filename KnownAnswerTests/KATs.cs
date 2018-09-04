@@ -97,7 +97,7 @@ namespace Testing
                 }
                 else
                 {
-                    hasher.Posthashing = Convert.ToInt32(digestkat["post-hashing"]);
+                    hasher.Posthashing = Convert.ToUInt16(digestkat["post-hashing"]);
                 }
 
                 string binstring = "bin" + workfactor;
@@ -167,7 +167,7 @@ namespace Testing
                 }
                 else
                 {
-                    hasher.Posthashing = Convert.ToInt32(digestkat["post-hashing"]);
+                    hasher.Posthashing = Convert.ToUInt16(digestkat["post-hashing"]);
                 }
 
                 string stringoutput = "str" + workfactor;
