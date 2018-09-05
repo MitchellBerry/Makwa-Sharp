@@ -57,6 +57,7 @@ namespace Testing
         bool TestKDF(HMAC hashfunction, List<Dictionary<String, String>> kats)
         {
             hasher.Hashfunction = hashfunction;
+            hasher.Modulus = n;
             bool outcome = false;
             int testcounter = 0;
             foreach (Dictionary<string, string> kdfkat in kats)
@@ -83,6 +84,7 @@ namespace Testing
         {
             hasher.Hashfunction = hashfuction;
             hasher.Workfactor = workfactor;
+            hasher.Modulus = n;
             bool outcome = false;
             int testcounter = 0;
             foreach (Dictionary<string, string> digestkat in kats)
@@ -102,7 +104,7 @@ namespace Testing
 
                 string binstring = "bin" + workfactor;
                 byte[] digestexpected = Tools.HexStringToByteArray(digestkat[binstring]);                
-                byte[] result = hasher.Digest(input, n, salt);
+                byte[] result = hasher.Digest(input, salt);
 
                 if (digestexpected.SequenceEqual<byte>(result))
                 {
@@ -172,7 +174,8 @@ namespace Testing
 
                 string stringoutput = "str" + workfactor;
                 string digestexpected = digestkat[stringoutput];
-                string result = hasher.HashPassword(input, n, salt);
+                hasher.Modulus = n;
+                string result = hasher.HashPassword(input, salt);
 
                 if (digestexpected == result)
                 {

@@ -6,6 +6,10 @@ namespace Makwa
 {
     public class Tools
     {
+        public static byte[] I2OSP(BigInteger x)
+        {
+            return I2OSP(x, x);
+        }
 
         public static byte[] I2OSP(BigInteger x, BigInteger modulus)
         {
@@ -53,12 +57,12 @@ namespace Makwa
             return x;
         }
 
-        public static string EncodeUnpaddedBase64(byte[] m)
+        public static string DecodeBase64(byte[] m)
         {
             return Convert.ToBase64String(m).Replace("=", "");
         }
 
-        public static byte[] DecodeUnpaddedBase64(string m)
+        public static byte[] EncodeUnpaddedBase64(string m)
         {
             int len = ((4 - (m.Length % 4) % 4));
             string padding = new string('=', len);
@@ -86,6 +90,7 @@ namespace Makwa
 
         public static bool InvalidWorkfactor(uint workfactor)
         {
+            if (workfactor == 0) { return true; }
             bool checkthree = IsPowerofTwo(workfactor / 3);
             bool checktwo = IsPowerofTwo(workfactor / 2);
             return (!(checkthree || checktwo));
@@ -96,7 +101,7 @@ namespace Makwa
             return (x != 0) && ((x & (x - 1)) == 0);
         }
 
-        public static uint SuggestWorkFactor(uint invalidWorkFactor)
+        public static uint SuggestWorkFactor(uint workFactor)
         {
             uint[] validWorkFactors = { 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512,
                 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192, 12288, 16384, 24576, 32768, 49152,
@@ -107,7 +112,7 @@ namespace Makwa
             uint distance = new int();
             for (int i = 0; i < validWorkFactors.Length; i++)
             {
-                distance = (uint)Math.Abs(validWorkFactors[i] - invalidWorkFactor);
+                distance = (uint)Math.Abs(validWorkFactors[i] - workFactor);
                 if (distance < smallestDistance)
                 {
                     smallestDistance = distance;
@@ -120,15 +125,18 @@ namespace Makwa
 
     public class Hasher
     {
-        public HMAC Hashfunction { get; set; } = new HMACSHA256();
-        public uint Workfactor { get; set; } = 4096;
-        public bool Prehashing { get; set; } = true;
+        public  HMAC Hashfunction { get; set; } = new HMACSHA256();
+        public  uint Workfactor { get; set; } = 4096;
+        public  bool Prehashing { get; set; } = true;
         public ushort Posthashing { get; set; } = 12;
-
+        public byte[] Modulus { get; set; }
         
-        //public string HashPassword(string password, )
+        public string HashPassword(string password)
+        {
+            return HashPassword(System.Text.Encoding.UTF8.GetBytes(password));
+        }
 
-        public string HashPassword(byte[] password, byte[] n, byte[] salt = null)
+        public string HashPassword(byte[] password, byte[] salt = null)
         {
             if (salt == null)
             {
@@ -141,17 +149,21 @@ namespace Makwa
             {
                 throw new ArgumentOutOfRangeException("Salt must be 16 bytes long");
             }
-            string moduluschecksum = Tools.EncodeUnpaddedBase64(KDF(n, 8));
+            string moduluschecksum = Tools.DecodeBase64(KDF(Modulus, 8));
             string statedata = GetStateData();
-            string saltb64 = Tools.EncodeUnpaddedBase64(salt);
-            byte[] digestresult = Digest(password, n, salt);
-            string digestb64 = Tools.EncodeUnpaddedBase64(digestresult);
-            return CreateHashString(moduluschecksum, statedata, saltb64, digestb64);
+            string saltb64 = Tools.DecodeBase64(salt);
+            byte[] digestbytes = Digest(password, salt);
+            string digest = Tools.DecodeBase64(digestbytes);
+            return CreateHashString(moduluschecksum, statedata, saltb64, digest);
         }
 
-        public byte[] Digest(byte[] password, byte[] mod, byte[] salt)
+        public byte[] Digest(byte[] password, byte[] salt)
         {
-            int k = mod.Length;
+            if (Modulus == null)
+            {
+                throw new ArgumentNullException("No modulus provided");
+            }
+            int k = Modulus.Length;
             if (k < 160)
             {
                 throw new ArgumentOutOfRangeException("Modulus must be greater than 160 bytes");
@@ -176,12 +188,16 @@ namespace Makwa
             byte[] zerobyte = new byte[] { 0 };
             byte[] xb = ConcatenateByteArrays(zerobyte, sb, password, ub);
             BigInteger x = new BigInteger(1, xb);
-            BigInteger n = new BigInteger(1, mod);
-            string xhex = x.ToString(16);
-            string nhex = n.ToString(16);
+            BigInteger n = new BigInteger(1, Modulus);
+            //string xhex = x.ToString(16);
+            //string nhex = n.ToString(16);
             BigInteger y = ModularSquarings(x, Workfactor, n);
             byte[] Y = Tools.I2OSP(y, n);
+            return PostHashing(Y);
+        }
 
+         byte[] PostHashing(byte[] Y)
+        {
             if (Posthashing >= 10)
             {
                 Y = KDF(Y, Posthashing);
@@ -191,7 +207,7 @@ namespace Makwa
                 throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
             }
             return Y;
-        }
+        } 
 
         static BigInteger ModularSquarings(BigInteger v, uint wf, BigInteger mod)
         {
@@ -243,8 +259,8 @@ namespace Makwa
             byte[] hexzero = new byte[] { 0x00 };
             byte[] hexone = new byte[] { 0x01 };
             int r = Hashfunction.HashSize / 8;
-            byte[] V = InitialiseCustomByteArray(0x01, r);
-            byte[] K = InitialiseCustomByteArray(0x00, r);
+            byte[] V = CustomByteArray(0x01, r);
+            byte[] K = CustomByteArray(0x00, r);
             HMAC hashbuffer = Hashfunction;
             hashbuffer.Key = K;
             byte[] hmacdata = ConcatenateByteArrays(V, hexzero, data);
@@ -263,7 +279,7 @@ namespace Makwa
             return output;
         }
 
-        static byte[] InitialiseCustomByteArray(byte custombyte, int length)
+        static byte[] CustomByteArray(byte custombyte, int length)
         {
             var arr = new byte[length];
             for (int i = 0; i < arr.Length; i++)

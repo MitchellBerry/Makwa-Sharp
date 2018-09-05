@@ -12,7 +12,7 @@ namespace Makwa
 		internal const int MAGIC_DELEG_REQ = 0x55414D33;
 		internal const int MAGIC_DELEG_ANS = 0x55414D34;
 
-		internal static int read8(Stream input)
+		internal static int Read8(Stream input)
 		{
             long len = input.Length;
             byte[] arr = new byte[len];
@@ -24,37 +24,37 @@ namespace Makwa
 			return x;
 		}
 
-		internal static int read16(System.IO.Stream input)
+		internal static int Read16(Stream input)
 		{
-			int h = read8(input);
-			int l = read8(input);
+			int h = Read8(input);
+			int l = Read8(input);
 			return (h << 8) + l;
 		}
 
-		internal static int read32(Stream input)
+		internal static int Read32(Stream input)
 		{
-			int h = read16(input);
-			int l = read16(input);
+			int h = Read16(input);
+			int l = Read16(input);
 			return (h << 16) + l;
 		}
 
-		internal static void readAll(System.IO.Stream input, byte[] buf)
+		internal static void ReadAll(Stream input, byte[] buf)
 		{
-			readAll(input, buf, 0, buf.Length);
+			ReadAll(input, buf, 0, buf.Length);
 		}
 
-		internal static void write8(System.IO.Stream output, int x)
+		internal static void Write8(Stream output, int x)
 		{
 			output.WriteByte((byte)x);
 		}
 
-		internal static void write16(System.IO.Stream output, int x)
+		internal static void Write16(Stream output, int x)
 		{
 			output.WriteByte((byte)(x >> 8));
 			output.WriteByte((byte)x);
 		}
 
-		internal static void write32(System.IO.Stream output, int x)
+		internal static void Write32(Stream output, int x)
 		{
 			output.WriteByte((byte)(x >> 24));
 			output.WriteByte((byte)(x >> 16));
@@ -62,7 +62,7 @@ namespace Makwa
 			output.WriteByte((byte)(x));
 		}
 
-		internal static void readAll(System.IO.Stream input, byte[] buf, int off, int len)
+		internal static void ReadAll(System.IO.Stream input, byte[] buf, int off, int len)
 		{
 			while (len > 0)
 			{
@@ -76,7 +76,7 @@ namespace Makwa
 			}
 		}
 
-		internal static void writeMPI(System.IO.Stream output, BigInteger v)
+		internal static void WriteMPI(Stream output, BigInteger v)
 		{
 			if (v.SignValue < 0)
 			{
@@ -102,11 +102,11 @@ namespace Makwa
 			output.Write(buf, off, len);
 		}
 
-		internal static BigInteger readMPI(System.IO.Stream input)
+		internal static BigInteger ReadMPI(System.IO.Stream input)
 		{
-			int len = read16(input);
+			int len = Read16(input);
 			byte[] buf = new byte[len];
-			readAll(input, buf);
+			ReadAll(input, buf);
 			return new BigInteger(1, buf);
 		}
 	}

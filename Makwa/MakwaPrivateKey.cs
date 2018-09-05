@@ -16,14 +16,14 @@ namespace Makwa
         {
             try
             {
-                System.IO.Stream input = new System.IO.MemoryStream(encoded);
-                int magic = MakwaIO.read32(input);
+                Stream input = new MemoryStream(encoded);
+                int magic = MakwaIO.Read32(input);
                 if (magic != MakwaIO.MAGIC_PRIVKEY)
                 {
                     throw new Exception("not an encoded Makwa private key");
                 }
-                BigInteger p = MakwaIO.readMPI(input);
-                BigInteger q = MakwaIO.readMPI(input);
+                BigInteger p = MakwaIO.ReadMPI(input);
+                BigInteger q = MakwaIO.ReadMPI(input);
                 long len = input.Length;
                 byte[] arr = new byte[len];
 
@@ -134,9 +134,9 @@ namespace Makwa
             try
             {
                 System.IO.MemoryStream output = new System.IO.MemoryStream();
-                MakwaIO.write32(output, MakwaIO.MAGIC_PRIVKEY);
-                MakwaIO.writeMPI(output, p);
-                MakwaIO.writeMPI(output, q);
+                MakwaIO.Write32(output, MakwaIO.MAGIC_PRIVKEY);
+                MakwaIO.WriteMPI(output, p);
+                MakwaIO.WriteMPI(output, q);
                 return output.ToArray();
             }
             catch (IOException ioe)
@@ -165,8 +165,8 @@ namespace Makwa
             try
             {
                 System.IO.MemoryStream output = new System.IO.MemoryStream();
-                MakwaIO.write32(output, MakwaIO.MAGIC_PUBKEY);
-                MakwaIO.writeMPI(output, modulus);
+                MakwaIO.Write32(output, MakwaIO.MAGIC_PUBKEY);
+                MakwaIO.WriteMPI(output, modulus);
                 return output.ToArray();
             }
             catch (IOException ioe)
@@ -187,12 +187,12 @@ namespace Makwa
             try
             {
                 System.IO.Stream input = new System.IO.MemoryStream(encoded);
-                int magic = MakwaIO.read32(input);
+                int magic = MakwaIO.Read32(input);
                 if (magic != MakwaIO.MAGIC_PUBKEY)
                 {
                     throw new Exception("not an encoded Makwa modulus");
                 }
-                BigInteger mod = MakwaIO.readMPI(input);
+                BigInteger mod = MakwaIO.ReadMPI(input);
                 long len = input.Length;
                 byte[] arr = new byte[len];
                 if (input.Read(arr, 0, (int)len) >= 0)
