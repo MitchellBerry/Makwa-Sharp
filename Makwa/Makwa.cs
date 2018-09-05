@@ -1,9 +1,12 @@
 ﻿using System;
 using Org.BouncyCastle.Math;
 using System.Security.Cryptography;
+using System.Runtime.Serialization;
 
 namespace Makwa
 {
+
+
     public class Tools
     {
         public static byte[] I2OSP(BigInteger x)
@@ -62,7 +65,7 @@ namespace Makwa
             return Convert.ToBase64String(m).Replace("=", "");
         }
 
-        public static byte[] EncodeUnpaddedBase64(string m)
+        public static byte[] EncodeBase64(string m)
         {
             int len = ((4 - (m.Length % 4) % 4));
             string padding = new string('=', len);
@@ -123,18 +126,64 @@ namespace Makwa
         }
     }
 
+    public struct PasswordHashString
+    {
+        public string modulusChecksum;
+        public string stateData;
+        public string salt;
+        public string digest;
+        public string fullHash
+        {
+            get
+            {
+                return fullHash;
+            }
+            set
+            {
+                string[] values = value.Split('_');
+                modulusChecksum = values[0];
+                stateData = values[1];
+                salt = values[2];
+                digest = values[3];
+                fullHash = value;
+            }
+        }
+    }
+
+
     public class Hasher
     {
-        public  HMAC Hashfunction { get; set; } = new HMACSHA256();
-        public  uint Workfactor { get; set; } = 4096;
-        public  bool Prehashing { get; set; } = true;
+        public HMAC Hashfunction { get; set; } = new HMACSHA256();
+        public uint Workfactor { get; set; } = 4096;
+        public bool Prehashing { get; set; } = true;
         public ushort Posthashing { get; set; } = 12;
         public byte[] Modulus { get; set; }
+        public static string ModulusChecksum { get; set; }
+        public byte[] ModulusID
+        {
+            get
+            {
+                return ModulusID;
+            }
+            set
+            {
+                ModulusID = KDF(Modulus, 8);
+                ModulusChecksum = Tools.DecodeBase64(ModulusID);
+            }
+        }
+
+        public bool VerifyPassword(string password, string hash)
+        {
+            PasswordHashString hashString = new PasswordHashString() { fullHash = hash };
+            
+        }
         
+
         public string HashPassword(string password)
         {
             return HashPassword(System.Text.Encoding.UTF8.GetBytes(password));
         }
+
 
         public string HashPassword(byte[] password, byte[] salt = null)
         {
@@ -149,12 +198,10 @@ namespace Makwa
             {
                 throw new ArgumentOutOfRangeException("Salt must be 16 bytes long");
             }
-            string moduluschecksum = Tools.DecodeBase64(KDF(Modulus, 8));
             string statedata = GetStateData();
             string saltb64 = Tools.DecodeBase64(salt);
-            byte[] digestbytes = Digest(password, salt);
-            string digest = Tools.DecodeBase64(digestbytes);
-            return CreateHashString(moduluschecksum, statedata, saltb64, digest);
+            string digest = Tools.DecodeBase64(Digest(password, salt));
+            return CreateHashString(ModulusChecksum, statedata, saltb64, digest);
         }
 
         public byte[] Digest(byte[] password, byte[] salt)
@@ -309,6 +356,184 @@ namespace Makwa
         static string CreateHashString(string moduluschecksum, string statedata, string salt, string digest)
         {
             return string.Join("_", new[] { moduluschecksum, statedata, salt, digest });
+        }
+
+        public static void ParseParams(PasswordHashString hashstring)
+        {
+            bool preHash;
+            int postHashLength;
+            byte[] tau = Tools.EncodeBase64(hashstring.digest);
+
+            if (hashstring.modulusChecksum != ModulusChecksum)
+            {
+                throw new Exception("Modulus doesn't match hasher");
+            }
+
+            string state = hashstring.stateData;
+            int workFactor = Convert.ToInt16(state.Substring(1, 1));
+            int wlh = Convert.ToInt16(state.Substring(2, 1));
+            int wll = Convert.ToInt16(state.Substring(3, 1));
+            int wl = 10 * wlh + wll;
+            workFactor <<= wl;
+
+            
+            string hashFlag = state.Substring(0, 1);
+            switch (hashFlag)
+            {
+                case "n":
+                    preHash = false;
+                    postHashLength = 0;
+                    break;
+                case "r":
+                    preHash = true;
+                    postHashLength = 0;
+                    break;
+                case "s":
+                    preHash = false;
+                    postHashLength = tau.Length;
+                    break;
+                case "b":
+                    preHash = true;
+                    postHashLength = tau.Length;
+                    break;
+                default:
+                    throw new MakwaException("invalid Makwa output string");
+            }
+
+        }
+
+        public class Output
+        {
+
+            private byte[] salt;
+            private bool preHash;
+            private int postHashLength;
+            private int workFactor;
+            private byte[] tau;
+            private BigInteger tauInt;
+
+            internal Output(string str)
+            {
+                // Get modulus ID and verify it.
+                int j = str.IndexOf('_');
+                if (j != 11)
+                {
+                    throw new MakwaException("invalid Makwa output string");
+                }
+                byte[] smod = Tools.DecodeBase64(str.Substring(0, j));
+
+                if (false)
+                {
+                    throw new MakwaException("invalid Makwa output string");
+                }
+                str = str.Substring(j + 1);
+
+                // Get flags & work factor.
+                j = str.IndexOf('_');
+                if (j != 4)
+                {
+                    throw new MakwaException("invalid Makwa output string");
+                }
+                char ht = str[0];
+                switch (str[1])
+                {
+                    case '2':
+                        workFactor = 2;
+                        break;
+                    case '3':
+                        workFactor = 3;
+                        break;
+                    default:
+                        throw new MakwaException("invalid Makwa output string");
+                }
+                int wlh = str[2] - '0';
+                int wll = str[3] - '0';
+                if (wlh < 0 || wlh > 9 || wll < 0 || wll > 9)
+                {
+                    throw new MakwaException("invalid Makwa output string");
+                }
+                int wl = 10 * wlh + wll;
+                if (wl > 29)
+                {
+                    throw new MakwaException("unsupported work factor (too large)");
+                }
+                workFactor <<= wl;
+                str = str.Substring(j + 1);
+
+                // Get salt.
+                j = str.IndexOf('_');
+                if (j < 0)
+                {
+                    throw new MakwaException("invalid Makwa output string");
+                }
+                salt = base64Decode(str.Substring(0, j), true, false);
+                str = str.Substring(j + 1);
+
+                // Get output.
+                tau = base64Decode(str, true, false);
+                if (tau.Length == 0)
+                {
+                    throw new MakwaException("invalid Makwa output string");
+                }
+
+                // Process flags.
+                switch (ht)
+                {
+                    case 'n':
+                        preHash = false;
+                        postHashLength = 0;
+                        break;
+                    case 'r':
+                        preHash = true;
+                        postHashLength = 0;
+                        break;
+                    case 's':
+                        preHash = false;
+                        postHashLength = tau.Length;
+                        break;
+                    case 'b':
+                        preHash = true;
+                        postHashLength = tau.Length;
+                        break;
+                    default:
+                        throw new MakwaException("invalid Makwa output string");
+                }
+                if (postHashLength == 0)
+                {
+                    tauInt = Tools.OS2IP(tau);
+                }
+                else if (postHashLength < 10)
+                {
+                    throw new MakwaException("invalid Makwa output string");
+                }
+                else
+                {
+                    tauInt = null;
+                }
+            }
+
+        }
+    }
+
+    
+
+    [Serializable]
+    internal class MakwaException : Exception
+    {
+        public MakwaException()
+        {
+        }
+
+        public MakwaException(string message) : base(message)
+        {
+        }
+
+        public MakwaException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected MakwaException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
         }
     }
 }

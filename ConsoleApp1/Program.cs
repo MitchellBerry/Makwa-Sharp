@@ -2,7 +2,6 @@
 using System;
 using System.IO;
 using CommandLine;
-using System.Text;
 using Org.BouncyCastle.Math;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -14,14 +13,6 @@ namespace CLI
         static public string filepath = "modulus";
         static readonly BigInteger four = new BigInteger("4");
         static readonly BigInteger three = new BigInteger("3");
-
-        //static readonly string nhex = "C22C40BBD056BB213AAD7C830519101AB926AE18E3E9FC9699C806E0AE5C259414A01AC1D5" +
-        //        "2E873EC08046A68E344C8D74A508952842EF0F03F71A6EDC077FAA14899A79F83C3AE136F774FA6EB88F1D1AEA5" +
-        //        "EA02FC0CCAF96E2CE86F3490F4993B4B566C0079641472DEFC14BECCF48984A7946F1441EA144EA4C802A457550" +
-        //        "BA3DF0F14C090A75FE9E6A77CF0BE98B71D56251A86943E719D27865A489566C1DC57FCDEFACA6AB043F8E13F6C" +
-        //        "0BE7B39C92DA86E1D87477A189E73CE8E311D3D51361F8B00249FB3D8435607B14A1E70170F9AF36784110A3F2E" +
-        //        "67428FC18FB013B30FE6782AECB4428D7C8E354A0FBD061B01917C727ABEE0FE3FD3CEF761";
-        //readonly static byte[] n = Tools.HexStringToByteArray(nhex);
 
         static bool Keychecks(MakwaPrivateKey privateKey)
         {
@@ -57,6 +48,7 @@ namespace CLI
         static byte[] CreateNewModulus(int length = 2048, string path = null)
         {
             MakwaPrivateKey privateKey = MakwaPrivateKey.Generate(length);
+            if (!(Keychecks(privateKey))) { throw new Exception("Prime Generation Error"); }
             byte[] modulus = Tools.I2OSP(privateKey.Modulus);
             if (path == null)
             {
@@ -138,7 +130,7 @@ namespace CLI
         [Option('p', "pre", Default = false, HelpText = "Enables Pre-hashing of password")]
         public bool Pre { get; set; }
 
-        [Option('l', "post",
+        [Option('l', "post", Default = (ushort)12,
         HelpText = "Post-Hashing length in bytes, reduces final hash size, set to 0 to get" +
             " full length. Minimum is 10")]
         public ushort Post { get; set; }
@@ -151,6 +143,7 @@ namespace CLI
             " an encoded BigInteger modulus, returns an error if doesn't exist")]
         public string Modulus { get; set; }
 
-        
+        [Option('v', "verify", HelpText = "Will verify the password against a hash")]
+        public string HashString { get; set; }
     }
 }
