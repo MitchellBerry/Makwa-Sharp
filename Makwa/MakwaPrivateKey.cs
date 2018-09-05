@@ -7,9 +7,8 @@ namespace Makwa
 {
     public class MakwaPrivateKey
     {
-
-        private BigInteger p;
-        private BigInteger q;
+        public BigInteger p;
+        public BigInteger q;
         private BigInteger modulus;
         private BigInteger invQ;
 
@@ -32,7 +31,7 @@ namespace Makwa
                 {
                     throw new Exception("invalid Makwa" + " private key (trailing garbage)");
                 }
-                init(p, q);
+                Init(p, q);
             }
             catch (IOException)
             {
@@ -49,10 +48,10 @@ namespace Makwa
         /// <param name="q">   the second prime factor </param>
         public MakwaPrivateKey(BigInteger p, BigInteger q)
         {
-            init(p, q);
+            Init(p, q);
         }
 
-        private void init(BigInteger p, BigInteger q)
+        private void Init(BigInteger p, BigInteger q)
         {
             if (p.SignValue <= 0 || q.SignValue <= 0 || (p.IntValue & 3) != 3 || (q.IntValue & 3) != 3 || p.Equals(q))
             {
@@ -108,7 +107,7 @@ namespace Makwa
         /// <param name="size">   the target modulus size </param>
         /// <returns>  the new private key </returns>
         /// <exception cref="Exception">  on error </exception>
-        public static MakwaPrivateKey generate(int size)
+        public static MakwaPrivateKey Generate(int size)
         {
             if (size < 1273 || size > 32768)
             {
@@ -116,8 +115,8 @@ namespace Makwa
             }
             int sizeP = (size + 1) >> 1;
             int sizeQ = size - sizeP;
-            BigInteger p = makeRandPrime(sizeP);
-            BigInteger q = makeRandPrime(sizeQ);
+            BigInteger p = MakeRandPrime(sizeP);
+            BigInteger q = MakeRandPrime(sizeQ);
             MakwaPrivateKey k = new MakwaPrivateKey(p, q);
             if (k.Modulus.BitLength != size)
             {
@@ -130,7 +129,7 @@ namespace Makwa
         /// Encode the private key into bytes.
         /// </summary>
         /// <returns>  the encoded private key </returns>
-        public virtual byte[] exportPrivate()
+        public virtual byte[] ExportPrivate()
         {
             try
             {
@@ -151,9 +150,9 @@ namespace Makwa
         /// Encode the public key (modulus) into bytes.
         /// </summary>
         /// <returns>  the encoded modulus </returns>
-        public virtual byte[] exportPublic()
+        public virtual byte[] ExportPublic()
         {
-            return encodePublic(modulus);
+            return EncodePublic(modulus);
         }
 
         /// <summary>
@@ -161,7 +160,7 @@ namespace Makwa
         /// </summary>
         /// <param name="modulus">   the modulus </param>
         /// <returns>  the encoded modulus </returns>
-        public static byte[] encodePublic(BigInteger modulus)
+        public static byte[] EncodePublic(BigInteger modulus)
         {
             try
             {
@@ -183,7 +182,7 @@ namespace Makwa
         /// <param name="encoded">   the encoded modulus </param>
         /// <returns>  the modulus </returns>
         /// <exception cref="Exception">  on error </exception>
-        public static BigInteger decodePublic(byte[] encoded)
+        public static BigInteger DecodePublic(byte[] encoded)
         {
             try
             {
@@ -235,7 +234,7 @@ namespace Makwa
 
         private static SecureRandom RNG;
 
-        internal static void prng(byte[] buf)
+        internal static void Prng(byte[] buf)
         {
 
             {
@@ -250,7 +249,7 @@ namespace Makwa
         /*
          * Generate a random integer in the 0..m-1 range (inclusive).
          */
-        internal static BigInteger makeRandInt(BigInteger m)
+        internal static BigInteger MakeRandInt(BigInteger m)
         {
             if (m.SignValue <= 0)
             {
@@ -266,7 +265,7 @@ namespace Makwa
             byte[] buf = new byte[len];
             for (; ; )
             {
-                prng(buf);
+                Prng(buf);
                 buf[0] &= (byte)mask;
                 BigInteger z = new BigInteger(1, buf);
                 if (z.CompareTo(m) < 0)
@@ -279,7 +278,7 @@ namespace Makwa
         /*
          * Make a random integer in the 1..m-1 range (inclusive).
          */
-        internal static BigInteger makeRandNonZero(BigInteger m)
+        internal static BigInteger MakeRandNonZero(BigInteger m)
         {
             if (m.CompareTo(BigInteger.One) <= 0)
             {
@@ -287,7 +286,7 @@ namespace Makwa
             }
             for (; ; )
             {
-                BigInteger z = makeRandInt(m);
+                BigInteger z = MakeRandInt(m);
                 if (z.SignValue != 0)
                 {
                     return z;
@@ -306,7 +305,7 @@ namespace Makwa
          * integer in the 2 to 47 range. Note that it returns true if
          * x is equal to one of these small primes.
          */
-        private static bool isMultipleSmallPrime(BigInteger x)
+        private static bool IsMultipleSmallPrime(BigInteger x)
         {
             if (x.SignValue < 0)
             {
@@ -350,12 +349,9 @@ namespace Makwa
         /// <param name="cc">   the count of rounds </param>
         /// <returns>  {@code false} for a composite integer, {@code true}
         ///          if the value was not detected as composite </returns>
-        private static bool passesMR(BigInteger n, int cc)
+        private static bool PassesMR(BigInteger n, int cc)
         {
-            /*
-             * Normalize n and handle very small values and even
-             * integers.
-             */
+
             if (n.SignValue < 0)
             {
                 n = n.Negate();
@@ -382,24 +378,6 @@ namespace Makwa
                 return true;
             }
 
-            /*
-             * Miller-Rabin algorithm:
-             *
-             * Set n-1 = r * 2^s  for an odd integer r and an integer s.
-             * For each round:
-             *  1. Choose a random a in the 2..n-2 range (inclusive)
-             *  2. Compute y = a^r mod n
-             *  3. If y != 1 and y != n-1, do:
-             *     a. j <- 1
-             *     b. while j < s and y != n-1:
-             *          y <- y^2 mod n
-             *          if y = 1 return false
-             *          j <- j+1
-             *     c. if y != n-1 return false
-             *
-             * If we do all the rounds without detecting a composite,
-             * return true.
-             */
             BigInteger nm1 = n.Subtract(BigInteger.One);
             BigInteger nm2 = nm1.Subtract(BigInteger.One);
             BigInteger r = nm1;
@@ -411,7 +389,7 @@ namespace Makwa
             }
             while (cc-- > 0)
             {
-                BigInteger a = makeRandNonZero(nm2).Add(BigInteger.One);
+                BigInteger a = MakeRandNonZero(nm2).Add(BigInteger.One);
                 BigInteger y = a.ModPow(r, n);
                 if (!y.Equals(BigInteger.One) && !y.Equals(nm1))
                 {
@@ -448,7 +426,7 @@ namespace Makwa
         /// </summary>
         /// <param name="size">   the target prime size </param>
         /// <returns>  the new random prime </returns>
-        static BigInteger makeRandPrime(int size)
+        static BigInteger MakeRandPrime(int size)
         {
             int len = (int)((uint)(size + 8) >> 3);
             byte[] buf = new byte[len];
@@ -456,7 +434,7 @@ namespace Makwa
             int mo16 = (int)((uint)0xC000 >> (8 * len - size));
             for (; ; )
             {
-                prng(buf);
+                Prng(buf);
                 buf[0] &= (byte)((int)((uint)mz16 >> 8));
                 buf[1] &= (byte)mz16;
                 buf[0] |= (byte)((int)((uint)mo16 >> 8));
@@ -482,7 +460,6 @@ namespace Makwa
         /// </summary>
         /// <param name="k">   the input integer size </param>
         /// <returns>  the number of Miller-Rabin rounds </returns>
-
         private static int ComputeNumMR(int k)
         {
             if (k < 400)
