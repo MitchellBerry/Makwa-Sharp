@@ -1,19 +1,24 @@
 ﻿using System;
 using Org.BouncyCastle.Math;
 using System.Security.Cryptography;
-using System.Runtime.Serialization;
 
 namespace Makwa
 {
 
-
     public class Tools
     {
+        /// <summary>
+        ///  Integer to Octet Stream Primitive, represents a Big Integer as a byte array
+        /// </summary>
         public static byte[] I2OSP(BigInteger x)
         {
             return I2OSP(x, x);
         }
 
+        /// <summary>
+        ///  Integer to Octet Stream Primitive, represents a Big Integer as a 
+        ///  byte array of length modulus
+        /// </summary>
         public static byte[] I2OSP(BigInteger x, BigInteger modulus)
         {
             int len = (modulus.BitLength + 7) >> 3;
@@ -38,6 +43,9 @@ namespace Makwa
 
         }
 
+        /// <summary>
+        /// Octet Stream to Integer Primitive, converts a byte array to BigInt
+        /// </summary>
         public static BigInteger OS2IP(byte[] b, BigInteger modulus)
         {
             int len = (modulus.BitLength + 7) >> 3;
@@ -60,11 +68,17 @@ namespace Makwa
             return x;
         }
 
+        /// <summary>
+        /// Decodes a byte array into an unpadded Base64 string
+        /// </summary>
         public static string DecodeBase64(byte[] m)
         {
             return Convert.ToBase64String(m).Replace("=", "");
         }
 
+        /// <summary>
+        /// Encodes an unpadded Base64 string
+        /// </summary>
         public static byte[] EncodeBase64(string m)
         {
             //int len = ((4 - (m.Length % 4) % 4));
@@ -73,6 +87,9 @@ namespace Makwa
             return Convert.FromBase64String(m + padding);
         }
 
+        /// <summary>
+        /// Transforms hex strings into a byte array 
+        /// </summary>
         public static byte[] HexStringToByteArray(String hexstring)
         {
             int NumberChars = hexstring.Length;
@@ -82,6 +99,10 @@ namespace Makwa
             return bytes;
         }
 
+        /// <summary>
+        /// Performs a byte by byte xor comparison of two arrays for the purpose 
+        /// of password verification, checks every byte regardless of failure,
+        /// used to prevent timing attacks.
         public static bool ConstantTimeComparison(byte[] a, byte[] b)
         {
             uint diff = (uint)a.Length ^ (uint)b.Length;
@@ -92,6 +113,10 @@ namespace Makwa
             return diff == 0;
         }
 
+        /// <summary>
+        /// This implementation enforces specific work factors of the form w = ζ · 2ᵟ
+        /// , where ζ = 2 or 3, and δ ≥ 0    
+        /// </summary>
         public static bool InvalidWorkfactor(uint workfactor)
         {
             if (workfactor == 0) { return true; }
@@ -105,6 +130,9 @@ namespace Makwa
             return (x != 0) && ((x & (x - 1)) == 0);
         }
 
+        /// <summary>
+        /// Provides the closest workfactor, when an invalid workfactor is supplied
+        /// </summary>
         public static uint SuggestWorkFactor(uint workFactor)
         {
             uint[] validWorkFactors = { 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512,
@@ -127,6 +155,9 @@ namespace Makwa
         }
     }
 
+    /// <summary>
+    /// A complete hash string broken down into component parts
+    /// </summary>
     public struct PasswordHashString
     {
         public string modulusChecksum;
@@ -152,13 +183,31 @@ namespace Makwa
         }
     }
 
+    /// <summary>
+    /// Parameters used in the creation of a password hash
+    /// </summary>
+    public struct Params
+    {
+        public bool PreHash { get; set; }
+        public ushort PostHashLength { get; set; }
+        public uint Workfactor { get; set; }
+        public byte[] Tau { get; set; }
+    }
 
+    /// <summary>
+    /// Contains all the methods for the primary hashing, key derivation function
+    /// and creating the formatted hash string
+    /// </summary>
     public class Hasher
     {
+        readonly byte[] hexzero = new byte[] { 0x00 };
+        readonly byte[] hexone = new byte[] { 0x01 };
         public HMAC Hashfunction { get; set; } = new HMACSHA256();
         public uint Workfactor { get; set; } = 4096;
         public bool Prehashing { get; set; } = true;
         public ushort Posthashing { get; set; } = 12;
+        public byte[] ModulusID { get; set; }
+        public string ModulusChecksum { get; set; }
         private byte[] _Modulus;
         public byte[] Modulus
         {
@@ -173,23 +222,16 @@ namespace Makwa
                 ModulusChecksum = Tools.DecodeBase64(ModulusID);
             }
         }
-        public byte[] ModulusID { get; set; }
-        public string ModulusChecksum { get; set; }
-        readonly byte[] hexzero = new byte[] { 0x00 };
-        readonly byte[] hexone = new byte[] { 0x01 };
 
-        public struct Params
-        {
-            public bool PreHash { get; set; }
-            public ushort PostHashLength { get; set; }
-            public uint Workfactor { get; set; }
-            public byte[] Tau { get; set; }
 
-        }
-
-        // Add exceptions for invalid string parameters
+        /// <summary>
+        /// Parses a formatted hash string and extracts the parameters used to
+        /// the create the hash
+        /// </summary>
+        /// 
         public static Params ParseParams(PasswordHashString hashstring)
         {
+            // Add exceptions for invalid string parameters
             Params output = new Params();
             output.Tau = Tools.EncodeBase64(hashstring.digest);
             string state = hashstring.stateData;
@@ -218,17 +260,28 @@ namespace Makwa
                     output.PostHashLength = (ushort)output.Tau.Length;
                     break;
                 default:
-                    throw new MakwaException("invalid Makwa output string");
+                    throw new Exception("invalid Makwa output string");
             }
             return output;
 
         }
 
+        /// <summary>
+        /// Confirms the modulus in a formatted hash string matches the
+        /// one currently being used by the hasher
+        /// </summary>
         bool InvalidModulus(PasswordHashString hashstring)
         {
             return hashstring.modulusChecksum != ModulusChecksum;
         }
 
+        /// <summary>
+        /// Verifies a given password against a formatted hash string, function uses 
+        /// constant time byte comparison to protect against timing attacks.
+        /// </summary>
+        /// <param name="password">Password to verify</param>
+        /// <param name="hash">A full formatted Makwa hash string</param>
+        /// <returns>A boolean confirmation</returns>
         public bool VerifyPassword(string password, string hash)
         {
             PasswordHashString hashString = new PasswordHashString() { FullHash = hash };
@@ -244,13 +297,42 @@ namespace Makwa
             bool match = Tools.ConstantTimeComparison(hashParams.Tau, passwordDigest);
             return match;
         }
-        
 
+        /// <summary>
+        /// The main Makwa hashing function which returns formatted hash string
+        /// </summary>
+        /// <remarks>
+        /// Final output contains:
+        /// <list type="bullet">
+        /// <item>
+        /// <description>Base64 modulus checksum</description>
+        /// </item>
+        /// <item>
+        /// <description>Pre and Post hashing flags</description>
+        /// </item>
+        /// <item>
+        /// <description>Workfactor used</description>
+        /// </item>
+        /// <item>
+        /// <description>Base64 salt</description>
+        /// </item>
+        /// <item>
+        /// <description>Base64 digest</description>
+        /// </item>
+        /// </list>
+        /// This takes the form: 
+        /// <code>B64(H8(N)) || “_” || F || “_” || B64(σ) || “_” || B64(τ)</code> 
+        /// </remarks>
+        /// <param name="password">The password to be hashed</param>
+        /// <returns>A complete formatted Makwa hash string</returns>
         public string HashPassword(string password)
         {
             return HashPassword(System.Text.Encoding.UTF8.GetBytes(password));
         }
 
+        /// <summary>
+        /// The main Makwa hashing function which returns formatted hash string
+        /// </summary>
         public string HashPassword(byte[] password, byte[] salt = null)
         {
             if (salt == null)
@@ -270,12 +352,26 @@ namespace Makwa
             return CreateHashString(ModulusChecksum, statedata, saltb64, digest);
         }
 
+        /// <summary>
+        /// The raw hash digest function
+        /// </summary>
+        /// <param name="password">Password to be hashed</param>
+        /// <param name="salt">(OPTIONAL) A user provided salt, must be 16 bytes long
+        /// leave null for a securely generated random value</param>
+        /// <returns>The digest bytes of the hashed password</returns>
         public byte[] Digest(string password, byte[] salt = null)
         {
             byte[] pwd = System.Text.Encoding.UTF8.GetBytes(password);
             return Digest(pwd, salt);
         }
 
+        /// <summary>
+        /// The raw hash digest function
+        /// </summary>
+        /// <param name="password">Password byte array to be hashed</param>
+        /// <param name="salt">(OPTIONAL) A user provided salt, must be 16 bytes long
+        /// leave null for a securely generated random value</param>
+        /// <returns>The digest bytes of the hashed password</returns>
         public byte[] Digest(byte[] password, byte[] salt = null)
         {
             if (Modulus == null)
@@ -290,8 +386,7 @@ namespace Makwa
             if (Tools.InvalidWorkfactor(Workfactor))
                 {
                     uint suggested = Tools.SuggestWorkFactor(Workfactor);
-                    throw new ArgumentOutOfRangeException("Closest valid workfactor: " + suggested + "" +
-                        Environment.NewLine + "Workfactors restricted to  w = ζ · 2^δ, where ζ = 2 or 3, and δ ≥ 0");
+                    throw new ArgumentOutOfRangeException("Invalid workfactor, closest valid: " + suggested);
                 }
             if (Prehashing)
             {
@@ -313,18 +408,18 @@ namespace Makwa
             return PostHashing(Y);
         }
 
-        byte[] PostHashing(byte[] Y)
+        private byte[] PostHashing(byte[] Y) 
         {
             if (Posthashing >= 10)
             {
                 Y = KDF(Y, Posthashing);
             }
             else if (Posthashing != 0)
-            {
-                throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
-            }
+                {
+                    throw new ArgumentOutOfRangeException("PostHashing length must be at least 10 bytes long");
+                }
             return Y;
-        } 
+        }
 
         static BigInteger ModularSquarings(BigInteger v, uint wf, BigInteger mod)
         {
@@ -336,6 +431,10 @@ namespace Makwa
             return v;
         }
 
+        /// <summary>
+        /// Gets the current hashing parameters and formats them for inclusion
+        /// in the HashPassword output
+        /// </summary>
         public string GetStateData()
         {
             string output = "";
@@ -367,6 +466,9 @@ namespace Makwa
             return output;
         }
 
+        /// <summary>
+        /// Key derivation function, returns a hash of the specified length
+        /// </summary>
         public byte[] KDF(byte[] data, int outLength)
         {
             if (!(Hashfunction is HMACSHA256 || Hashfunction is HMACSHA512))
@@ -425,27 +527,6 @@ namespace Makwa
         static string CreateHashString(string moduluschecksum, string statedata, string salt, string digest)
         {
             return string.Join("_", new[] { moduluschecksum, statedata, salt, digest });
-        }
-    }
-
-
-    [Serializable]
-    internal class MakwaException : Exception
-    {
-        public MakwaException()
-        {
-        }
-
-        public MakwaException(string message) : base(message)
-        {
-        }
-
-        public MakwaException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
-        protected MakwaException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
         }
     }
 }
