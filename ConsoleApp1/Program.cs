@@ -14,17 +14,6 @@ namespace CLI
         static readonly BigInteger four = new BigInteger("4");
         static readonly BigInteger three = new BigInteger("3");
 
-        static bool Keychecks(MakwaPrivateKey privateKey)
-        {
-            BigInteger p = privateKey.p;
-            BigInteger q = privateKey.q;
-            bool pprime = p.IsProbablePrime(150);
-            bool qprime = q.IsProbablePrime(150);
-            bool pblum = p.Mod(four).Equals(three);
-            bool qblum = q.Mod(four).Equals(three);
-            return pprime || qprime || pblum || qblum;
-        }
-
         static byte[] GetModulus(string path = null)
         {
             if (path == null) { path = filepath; }
@@ -48,7 +37,6 @@ namespace CLI
         static byte[] CreateNewModulus(int length = 2048, string path = null)
         {
             MakwaPrivateKey privateKey = MakwaPrivateKey.Generate(length);
-            if (!(Keychecks(privateKey))) { throw new Exception("Prime Generation Error"); }
             byte[] modulus = Tools.I2OSP(privateKey.Modulus);
             if (path == null)
             {
