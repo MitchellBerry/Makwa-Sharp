@@ -157,20 +157,21 @@ namespace Makwa
         public uint Workfactor { get; set; } = 4096;
         public bool Prehashing { get; set; } = true;
         public ushort Posthashing { get; set; } = 12;
-        public byte[] Modulus { get; set; }
-        public static string ModulusChecksum { get; set; }
-        public byte[] ModulusID
+        public byte[] Modulus
         {
             get
             {
-                return ModulusID;
+                return Modulus;
             }
             set
             {
-                ModulusID = KDF(Modulus, 8);
+                Modulus = value;
+                ModulusID = KDF(value, 8);
                 ModulusChecksum = Tools.DecodeBase64(ModulusID);
             }
         }
+        public static string ModulusChecksum { get; set; }
+        public byte[] ModulusID { get; set; }
 
         public struct Params
         {
@@ -237,10 +238,8 @@ namespace Makwa
             hasher.Workfactor = hashParams.workfactor;
 
             // hash submitted password
-
             byte[] passwordDigest = hasher.Digest(password, hashString.salt);
             // constant time check
-
             bool match = Tools.ConstantTimeComparison(hashParams.tau, passwordDigest);
             return match;
         }

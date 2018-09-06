@@ -72,8 +72,9 @@ namespace CLI
         
         static void Main()
         {
-          
+
             string[] args = Console.ReadLine().Split();
+            //string[] args = { "password", "-l", "12" };
             var options = new Options();
             var result = Parser.Default.ParseArguments<Options>(args);
             var resultParsed = result.WithParsed(opts => RunOptionsAndReturn(opts))
@@ -98,11 +99,11 @@ namespace CLI
 
             Hasher makwa = new Hasher
             {
-                Modulus = GetModulus(opts.Modulus),
                 Prehashing = opts.Pre,
                 Posthashing = opts.Post,
                 Workfactor = opts.WorkFactor
             };
+            makwa.Modulus = GetModulus(opts.Modulus);
             if (opts.SHA512)
             {
                 makwa.Hashfunction = new HMACSHA512();
