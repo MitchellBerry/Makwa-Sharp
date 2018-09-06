@@ -157,21 +157,21 @@ namespace Makwa
         public uint Workfactor { get; set; } = 4096;
         public bool Prehashing { get; set; } = true;
         public ushort Posthashing { get; set; } = 12;
-        public byte[] Modulus
+        public byte[] Modulus { get; set; }
+        public byte[] ModulusID
         {
             get
             {
-                return Modulus;
-            }
-            set
-            {
-                Modulus = value;
-                ModulusID = KDF(value, 8);
-                ModulusChecksum = Tools.DecodeBase64(ModulusID);
+                return KDF(Modulus, 8);
             }
         }
-        public static string ModulusChecksum { get; set; }
-        public byte[] ModulusID { get; set; }
+        public string ModulusChecksum
+        {
+            get
+            {
+                return Tools.DecodeBase64(ModulusID);
+            }
+        }
 
         public struct Params
         {
@@ -218,7 +218,7 @@ namespace Makwa
 
         }
 
-        static bool InvalidModulus(PasswordHashString hashstring)
+        bool InvalidModulus(PasswordHashString hashstring)
         {
             return hashstring.modulusChecksum != ModulusChecksum;
         }
