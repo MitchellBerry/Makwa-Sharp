@@ -75,6 +75,7 @@ namespace CLI
 
             string[] args = Console.ReadLine().Split();
             //string[] args = { "password", "-l", "12" };
+            //string[] args = "pws -v VEwPfgcAews_s211_6Z/omBvD2q5bdzSJ9IgPAg_eGxAYvy8C3j3zsp/".Split(' ');
             var options = new Options();
             var result = Parser.Default.ParseArguments<Options>(args);
             var resultParsed = result.WithParsed(opts => RunOptionsAndReturn(opts))
@@ -96,14 +97,13 @@ namespace CLI
 
         static int RunOptionsAndReturn(Options opts)
         {
-
             Hasher makwa = new Hasher
             {
+                Modulus = GetModulus(opts.Modulus),
                 Prehashing = opts.Pre,
                 Posthashing = opts.Post,
                 Workfactor = opts.WorkFactor
             };
-            makwa.Modulus = GetModulus(opts.Modulus);
             if (opts.SHA512)
             {
                 makwa.Hashfunction = new HMACSHA512();
@@ -112,11 +112,33 @@ namespace CLI
             {
                 makwa.Hashfunction = new HMACSHA256();
             }
+
+            if (opts.VerifyString != null)
+            {
+                return Verify(makwa, opts);
+            }
+
             string passwordHash = makwa.HashPassword(opts.Password);
             Console.WriteLine(passwordHash);
             return 0;  
         }
+
+        static int Verify(Hasher makwa, Options opts)
+        {
+            bool match = makwa.VerifyPassword(opts.Password, opts.VerifyString);
+            if (match)
+            {
+                Console.Write("True");
+                return 0;
+            }
+            else
+            {
+                Console.Write("False");
+                return 1;
+            }
+        }
     }
+
 
 
     class Options
@@ -145,6 +167,6 @@ namespace CLI
         public string Modulus { get; set; }
 
         [Option('v', "verify", HelpText = "Will verify the password against a hash")]
-        public string HashString { get; set; }
+        public string VerifyString { get; set; }
     }
 }

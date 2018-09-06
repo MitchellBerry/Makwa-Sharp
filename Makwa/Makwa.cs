@@ -67,7 +67,8 @@ namespace Makwa
 
         public static byte[] EncodeBase64(string m)
         {
-            int len = ((4 - (m.Length % 4) % 4));
+            //int len = ((4 - (m.Length % 4) % 4));
+            int len = (m.Length % 4);
             string padding = new string('=', len);
             return Convert.FromBase64String(m + padding);
         }
@@ -132,11 +133,12 @@ namespace Makwa
         public string stateData;
         public byte[] salt;
         public string digest;
+        private string _fullHash;
         public string fullHash
         {
             get
             {
-                return fullHash;
+                return _fullHash;
             }
             set
             {
@@ -145,7 +147,7 @@ namespace Makwa
                 stateData = values[1];
                 salt = Tools.EncodeBase64(values[2]);
                 digest = values[3];
-                fullHash = value;
+                _fullHash = value;
             }
         }
     }
@@ -157,21 +159,22 @@ namespace Makwa
         public uint Workfactor { get; set; } = 4096;
         public bool Prehashing { get; set; } = true;
         public ushort Posthashing { get; set; } = 12;
-        public byte[] Modulus { get; set; }
-        public byte[] ModulusID
+        private byte[] _Modulus;
+        public byte[] Modulus
         {
             get
             {
-                return KDF(Modulus, 8);
+                return _Modulus;
             }
-        }
-        public string ModulusChecksum
-        {
-            get
+            set
             {
-                return Tools.DecodeBase64(ModulusID);
+                _Modulus = value;
+                ModulusID = KDF(Modulus, 8);
+                ModulusChecksum = Tools.DecodeBase64(ModulusID);
             }
         }
+        public byte[] ModulusID { get; set; }
+        public string ModulusChecksum { get; set; }
 
         public struct Params
         {
@@ -232,13 +235,12 @@ namespace Makwa
             {
                 throw new Exception("Password modulus doesnt match hashher modulus");
             }
-            Hasher hasher = new Hasher();
-            hasher.Prehashing = hashParams.preHash;
-            hasher.Posthashing = hashParams.postHashLength;
-            hasher.Workfactor = hashParams.workfactor;
+            Prehashing = hashParams.preHash;
+            Posthashing = hashParams.postHashLength;
+            Workfactor = hashParams.workfactor;
 
             // hash submitted password
-            byte[] passwordDigest = hasher.Digest(password, hashString.salt);
+            byte[] passwordDigest = Digest(password, hashString.salt);
             // constant time check
             bool match = Tools.ConstantTimeComparison(hashParams.tau, passwordDigest);
             return match;
