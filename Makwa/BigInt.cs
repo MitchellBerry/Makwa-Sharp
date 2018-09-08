@@ -23,7 +23,6 @@ using System.Security.Cryptography;
 using static Makwa.BigInt.DigestRandomGenerator;
 
 
-
 namespace Makwa.BigInt
 {
 
@@ -151,26 +150,6 @@ internal static readonly int[][] primeLists = new int[][]
         public static readonly BigInteger Three;
         public static readonly BigInteger Ten;
 
-        //private readonly static byte[] BitCountTable =
-        //{
-        //    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-        //    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        //    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        //    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        //    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        //    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        //    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        //    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        //    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-        //    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        //    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        //    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        //    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-        //    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        //    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-        //    4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
-        //};
-
         private readonly static byte[] BitLengthTable =
         {
             0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -191,7 +170,6 @@ internal static readonly int[][] primeLists = new int[][]
             8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
         };
 
-        // TODO Parse radix-2 64 bits at a time and radix-8 63 bits at a time
         private const int chunk2 = 1, chunk8 = 1, chunk10 = 19, chunk16 = 16;
         private static readonly BigInteger radix2, radix2E, radix8, radix8E, radix10, radix10E, radix16, radix16E;
 
@@ -390,14 +368,7 @@ internal static readonly int[][] primeLists = new int[][]
                 return;
             }
 
-            //////
-            // could we work out the max number of ints required to store
-            // str.Length digits in the given base, then allocate that
-            // storage in one hit?, then Generate the magnitude in one hit too?
-            //////
-
             BigInteger b = Zero;
-
 
             int next = index + chunk;
 
@@ -484,17 +455,6 @@ internal static readonly int[][] primeLists = new int[][]
                 }
             }
 
-            // Note: This is the previous (slower) algorithm
-            //			while (index < value.Length)
-            //            {
-            //				char c = value[index];
-            //				string s = c.ToString();
-            //				int i = Int32.Parse(s, style);
-            //
-            //                b = b.Multiply(r).Add(ValueOf(i));
-            //                index++;
-            //            }
-
             magnitude = b.magnitude;
         }
 
@@ -512,7 +472,6 @@ internal static readonly int[][] primeLists = new int[][]
             if (length == 0)
                 throw new FormatException("Zero length BigInteger");
 
-            // TODO Move this processing into MakeMagnitude (provide sign argument)
             if ((sbyte)bytes[offset] < 0)
             {
                 this.sign = -1;
@@ -1320,7 +1279,6 @@ internal static readonly int[][] primeLists = new int[][]
             return sign < 0 ? ~hc : hc;
         }
 
-        // TODO Make public?
         private BigInteger Inc()
         {
             if (this.sign == 0)
@@ -1439,9 +1397,6 @@ internal static readonly int[][] primeLists = new int[][]
             int s = n.GetLowestSetBitMaskFirst(-1 << 1);
             Debug.Assert(s >= 1);
             BigInteger r = n.ShiftRight(s);
-
-            // NOTE: Avoid conversion to/from Montgomery form and check for R/-R as result instead
-
             BigInteger montRadix = One.ShiftLeft(32 * n.magnitude.Length).Remainder(n);
             BigInteger minusMontRadix = n.Subtract(montRadix);
 
@@ -2593,7 +2548,6 @@ internal static readonly int[][] primeLists = new int[][]
                     if (val == 1)
                         return Zero;
 
-                    // TODO Make this func work on uint, and handle val == 1?
                     int rem = Remainder(val);
 
                     return rem == 0
@@ -2608,7 +2562,6 @@ internal static readonly int[][] primeLists = new int[][]
             int[] result;
             if (n.QuickPow2Check())  // n is power of two
             {
-                // TODO Move before small values branch above?
                 result = LastNBits(n.Abs().BitLength - 1);
             }
             else
@@ -2828,12 +2781,6 @@ internal static readonly int[][] primeLists = new int[][]
             if (n >= BitLength)
                 return (this.sign < 0 ? One.Negate() : Zero);
 
-            //			int[] res = (int[]) this.magnitude.Clone();
-            //
-            //			ShiftRightInPlace(0, res, n);
-            //
-            //			return new BigInteger(this.sign, res, true);
-
             int resultLength = (BitLength - n + 31) >> 5;
             int[] res = new int[resultLength];
 
@@ -2913,10 +2860,10 @@ internal static readonly int[][] primeLists = new int[][]
             if (n.sign == 0)
                 return this;
 
-            if (this.sign == 0)
+            if (sign == 0)
                 return n.Negate();
 
-            if (this.sign != n.sign)
+            if (sign != n.sign)
                 return Add(n.Negate());
 
             int compare = CompareNoLeadingZeroes(0, magnitude, 0, n.magnitude);
@@ -2935,7 +2882,7 @@ internal static readonly int[][] primeLists = new int[][]
                 lilun = n;
             }
 
-            return new BigInteger(this.sign * compare, DoSubBigLil(bigun.magnitude, lilun.magnitude), true);
+            return new BigInteger(sign * compare, DoSubBigLil(bigun.magnitude, lilun.magnitude), true);
         }
 
         private static int[] DoSubBigLil(
@@ -3129,8 +3076,6 @@ internal static readonly int[][] primeLists = new int[][]
                         }
                         break;
                     }
-                // TODO This could work for other radices if there is an alternative to Convert.ToString method
-                //default:
                 case 10:
                     {
                         BigInteger q = this.Abs();
@@ -3140,7 +3085,6 @@ internal static readonly int[][] primeLists = new int[][]
                             break;
                         }
 
-                        // TODO Could cache the moduli for each radix (soft reference?)
                         IList moduli = Platform.CreateArrayList();
                         BigInteger R = BigInteger.ValueOf(radix);
                         while (R.CompareTo(q) <= 0)
@@ -3157,7 +3101,6 @@ internal static readonly int[][] primeLists = new int[][]
                         break;
                     }
             }
-
             return sb.ToString();
         }
 
@@ -3342,7 +3285,6 @@ internal static readonly int[][] primeLists = new int[][]
 
             BigInteger result = new BigInteger(1, resultMag, true);
 
-            // TODO Optimise this case
             if (resultNeg)
             {
                 result = result.Not();
@@ -3401,7 +3343,6 @@ internal static readonly int[][] primeLists = new int[][]
 
             BigInteger result = new BigInteger(1, resultMag, true);
 
-            // TODO Optimise this case
             if (resultNeg)
             {
                 result = result.Not();
@@ -3685,351 +3626,9 @@ internal static readonly int[][] primeLists = new int[][]
         }
     }
 
+    //Reduced functionality Arrays class
     public abstract class Arrays
     {
-        public static bool AreEqual(
-            bool[] a,
-            bool[] b)
-        {
-            if (a == b)
-                return true;
-
-            if (a == null || b == null)
-                return false;
-
-            return HaveSameContents(a, b);
-        }
-
-        public static bool AreEqual(
-            char[] a,
-            char[] b)
-        {
-            if (a == b)
-                return true;
-
-            if (a == null || b == null)
-                return false;
-
-            return HaveSameContents(a, b);
-        }
-
-        /// <summary>
-        /// Are two arrays equal.
-        /// </summary>
-        /// <param name="a">Left side.</param>
-        /// <param name="b">Right side.</param>
-        /// <returns>True if equal.</returns>
-        public static bool AreEqual(
-            byte[] a,
-            byte[] b)
-        {
-            if (a == b)
-                return true;
-
-            if (a == null || b == null)
-                return false;
-
-            return HaveSameContents(a, b);
-        }
-
-        [Obsolete("Use 'AreEqual' method instead")]
-        public static bool AreSame(
-            byte[] a,
-            byte[] b)
-        {
-            return AreEqual(a, b);
-        }
-
-        /// <summary>
-        /// A constant time equals comparison - does not terminate early if
-        /// test will fail.
-        /// </summary>
-        /// <param name="a">first array</param>
-        /// <param name="b">second array</param>
-        /// <returns>true if arrays equal, false otherwise.</returns>
-        public static bool ConstantTimeAreEqual(
-            byte[] a,
-            byte[] b)
-        {
-            int i = a.Length;
-            if (i != b.Length)
-                return false;
-            int cmp = 0;
-            while (i != 0)
-            {
-                --i;
-                cmp |= (a[i] ^ b[i]);
-            }
-            return cmp == 0;
-        }
-
-        public static bool AreEqual(
-            int[] a,
-            int[] b)
-        {
-            if (a == b)
-                return true;
-
-            if (a == null || b == null)
-                return false;
-
-            return HaveSameContents(a, b);
-        }
-
-        public static bool AreEqual(uint[] a, uint[] b)
-        {
-            if (a == b)
-                return true;
-
-            if (a == null || b == null)
-                return false;
-
-            return HaveSameContents(a, b);
-        }
-
-        private static bool HaveSameContents(
-            bool[] a,
-            bool[] b)
-        {
-            int i = a.Length;
-            if (i != b.Length)
-                return false;
-            while (i != 0)
-            {
-                --i;
-                if (a[i] != b[i])
-                    return false;
-            }
-            return true;
-        }
-
-        private static bool HaveSameContents(
-            char[] a,
-            char[] b)
-        {
-            int i = a.Length;
-            if (i != b.Length)
-                return false;
-            while (i != 0)
-            {
-                --i;
-                if (a[i] != b[i])
-                    return false;
-            }
-            return true;
-        }
-
-        private static bool HaveSameContents(
-            byte[] a,
-            byte[] b)
-        {
-            int i = a.Length;
-            if (i != b.Length)
-                return false;
-            while (i != 0)
-            {
-                --i;
-                if (a[i] != b[i])
-                    return false;
-            }
-            return true;
-        }
-
-        private static bool HaveSameContents(
-            int[] a,
-            int[] b)
-        {
-            int i = a.Length;
-            if (i != b.Length)
-                return false;
-            while (i != 0)
-            {
-                --i;
-                if (a[i] != b[i])
-                    return false;
-            }
-            return true;
-        }
-
-        private static bool HaveSameContents(uint[] a, uint[] b)
-        {
-            int i = a.Length;
-            if (i != b.Length)
-                return false;
-            while (i != 0)
-            {
-                --i;
-                if (a[i] != b[i])
-                    return false;
-            }
-            return true;
-        }
-
-        public static string ToString(
-            object[] a)
-        {
-            StringBuilder sb = new StringBuilder('[');
-            if (a.Length > 0)
-            {
-                sb.Append(a[0]);
-                for (int index = 1; index < a.Length; ++index)
-                {
-                    sb.Append(", ").Append(a[index]);
-                }
-            }
-            sb.Append(']');
-            return sb.ToString();
-        }
-
-        public static int GetHashCode(byte[] data)
-        {
-            if (data == null)
-            {
-                return 0;
-            }
-
-            int i = data.Length;
-            int hc = i + 1;
-
-            while (--i >= 0)
-            {
-                hc *= 257;
-                hc ^= data[i];
-            }
-
-            return hc;
-        }
-
-        public static int GetHashCode(byte[] data, int off, int len)
-        {
-            if (data == null)
-            {
-                return 0;
-            }
-
-            int i = len;
-            int hc = i + 1;
-
-            while (--i >= 0)
-            {
-                hc *= 257;
-                hc ^= data[off + i];
-            }
-
-            return hc;
-        }
-
-        public static int GetHashCode(int[] data)
-        {
-            if (data == null)
-                return 0;
-
-            int i = data.Length;
-            int hc = i + 1;
-
-            while (--i >= 0)
-            {
-                hc *= 257;
-                hc ^= data[i];
-            }
-
-            return hc;
-        }
-
-        public static int GetHashCode(int[] data, int off, int len)
-        {
-            if (data == null)
-                return 0;
-
-            int i = len;
-            int hc = i + 1;
-
-            while (--i >= 0)
-            {
-                hc *= 257;
-                hc ^= data[off + i];
-            }
-
-            return hc;
-        }
-
-        public static int GetHashCode(uint[] data)
-        {
-            if (data == null)
-                return 0;
-
-            int i = data.Length;
-            int hc = i + 1;
-
-            while (--i >= 0)
-            {
-                hc *= 257;
-                hc ^= (int)data[i];
-            }
-
-            return hc;
-        }
-
-        
-        public static int GetHashCode(uint[] data, int off, int len)
-        {
-            if (data == null)
-                return 0;
-
-            int i = len;
-            int hc = i + 1;
-
-            while (--i >= 0)
-            {
-                hc *= 257;
-                hc ^= (int)data[off + i];
-            }
-
-            return hc;
-        }
-
-        
-        public static int GetHashCode(ulong[] data)
-        {
-            if (data == null)
-                return 0;
-
-            int i = data.Length;
-            int hc = i + 1;
-
-            while (--i >= 0)
-            {
-                ulong di = data[i];
-                hc *= 257;
-                hc ^= (int)di;
-                hc *= 257;
-                hc ^= (int)(di >> 32);
-            }
-
-            return hc;
-        }
-
-        
-        public static int GetHashCode(ulong[] data, int off, int len)
-        {
-            if (data == null)
-                return 0;
-
-            int i = len;
-            int hc = i + 1;
-
-            while (--i >= 0)
-            {
-                ulong di = data[off + i];
-                hc *= 257;
-                hc ^= (int)di;
-                hc *= 257;
-                hc ^= (int)(di >> 32);
-            }
-
-            return hc;
-        }
-
         public static byte[] Clone(
             byte[] data)
         {
@@ -4091,292 +3690,6 @@ internal static readonly int[][] primeLists = new int[][]
             Array.Copy(data, 0, existing, 0, existing.Length);
             return existing;
         }
-
-        public static bool Contains(byte[] a, byte n)
-        {
-            for (int i = 0; i < a.Length; ++i)
-            {
-                if (a[i] == n)
-                    return true;
-            }
-            return false;
-        }
-
-        public static bool Contains(short[] a, short n)
-        {
-            for (int i = 0; i < a.Length; ++i)
-            {
-                if (a[i] == n)
-                    return true;
-            }
-            return false;
-        }
-
-        public static bool Contains(int[] a, int n)
-        {
-            for (int i = 0; i < a.Length; ++i)
-            {
-                if (a[i] == n)
-                    return true;
-            }
-            return false;
-        }
-
-        public static void Fill(
-            byte[] buf,
-            byte b)
-        {
-            int i = buf.Length;
-            while (i > 0)
-            {
-                buf[--i] = b;
-            }
-        }
-
-        public static byte[] CopyOf(byte[] data, int newLength)
-        {
-            byte[] tmp = new byte[newLength];
-            Array.Copy(data, 0, tmp, 0, System.Math.Min(newLength, data.Length));
-            return tmp;
-        }
-
-        public static char[] CopyOf(char[] data, int newLength)
-        {
-            char[] tmp = new char[newLength];
-            Array.Copy(data, 0, tmp, 0, System.Math.Min(newLength, data.Length));
-            return tmp;
-        }
-
-        public static int[] CopyOf(int[] data, int newLength)
-        {
-            int[] tmp = new int[newLength];
-            Array.Copy(data, 0, tmp, 0, System.Math.Min(newLength, data.Length));
-            return tmp;
-        }
-
-        public static long[] CopyOf(long[] data, int newLength)
-        {
-            long[] tmp = new long[newLength];
-            Array.Copy(data, 0, tmp, 0, System.Math.Min(newLength, data.Length));
-            return tmp;
-        }
-
-        public static BigInteger[] CopyOf(BigInteger[] data, int newLength)
-        {
-            BigInteger[] tmp = new BigInteger[newLength];
-            Array.Copy(data, 0, tmp, 0, System.Math.Min(newLength, data.Length));
-            return tmp;
-        }
-
-        /**
-         * Make a copy of a range of bytes from the passed in data array. The range can
-         * extend beyond the end of the input array, in which case the return array will
-         * be padded with zeroes.
-         *
-         * @param data the array from which the data is to be copied.
-         * @param from the start index at which the copying should take place.
-         * @param to the final index of the range (exclusive).
-         *
-         * @return a new byte array containing the range given.
-         */
-        public static byte[] CopyOfRange(byte[] data, int from, int to)
-        {
-            int newLength = GetLength(from, to);
-            byte[] tmp = new byte[newLength];
-            Array.Copy(data, from, tmp, 0, System.Math.Min(newLength, data.Length - from));
-            return tmp;
-        }
-
-        public static int[] CopyOfRange(int[] data, int from, int to)
-        {
-            int newLength = GetLength(from, to);
-            int[] tmp = new int[newLength];
-            Array.Copy(data, from, tmp, 0, System.Math.Min(newLength, data.Length - from));
-            return tmp;
-        }
-
-        public static long[] CopyOfRange(long[] data, int from, int to)
-        {
-            int newLength = GetLength(from, to);
-            long[] tmp = new long[newLength];
-            Array.Copy(data, from, tmp, 0, System.Math.Min(newLength, data.Length - from));
-            return tmp;
-        }
-
-        public static BigInteger[] CopyOfRange(BigInteger[] data, int from, int to)
-        {
-            int newLength = GetLength(from, to);
-            BigInteger[] tmp = new BigInteger[newLength];
-            Array.Copy(data, from, tmp, 0, System.Math.Min(newLength, data.Length - from));
-            return tmp;
-        }
-
-        private static int GetLength(int from, int to)
-        {
-            int newLength = to - from;
-            if (newLength < 0)
-                throw new ArgumentException(from + " > " + to);
-            return newLength;
-        }
-
-        public static byte[] Append(byte[] a, byte b)
-        {
-            if (a == null)
-                return new byte[] { b };
-
-            int length = a.Length;
-            byte[] result = new byte[length + 1];
-            Array.Copy(a, 0, result, 0, length);
-            result[length] = b;
-            return result;
-        }
-
-        public static short[] Append(short[] a, short b)
-        {
-            if (a == null)
-                return new short[] { b };
-
-            int length = a.Length;
-            short[] result = new short[length + 1];
-            Array.Copy(a, 0, result, 0, length);
-            result[length] = b;
-            return result;
-        }
-
-        public static int[] Append(int[] a, int b)
-        {
-            if (a == null)
-                return new int[] { b };
-
-            int length = a.Length;
-            int[] result = new int[length + 1];
-            Array.Copy(a, 0, result, 0, length);
-            result[length] = b;
-            return result;
-        }
-
-        public static byte[] Concatenate(byte[] a, byte[] b)
-        {
-            if (a == null)
-                return Clone(b);
-            if (b == null)
-                return Clone(a);
-
-            byte[] rv = new byte[a.Length + b.Length];
-            Array.Copy(a, 0, rv, 0, a.Length);
-            Array.Copy(b, 0, rv, a.Length, b.Length);
-            return rv;
-        }
-
-        public static byte[] ConcatenateAll(params byte[][] vs)
-        {
-            byte[][] nonNull = new byte[vs.Length][];
-            int count = 0;
-            int totalLength = 0;
-
-            for (int i = 0; i < vs.Length; ++i)
-            {
-                byte[] v = vs[i];
-                if (v != null)
-                {
-                    nonNull[count++] = v;
-                    totalLength += v.Length;
-                }
-            }
-
-            byte[] result = new byte[totalLength];
-            int pos = 0;
-
-            for (int j = 0; j < count; ++j)
-            {
-                byte[] v = nonNull[j];
-                Array.Copy(v, 0, result, pos, v.Length);
-                pos += v.Length;
-            }
-
-            return result;
-        }
-
-        public static int[] Concatenate(int[] a, int[] b)
-        {
-            if (a == null)
-                return Clone(b);
-            if (b == null)
-                return Clone(a);
-
-            int[] rv = new int[a.Length + b.Length];
-            Array.Copy(a, 0, rv, 0, a.Length);
-            Array.Copy(b, 0, rv, a.Length, b.Length);
-            return rv;
-        }
-
-        public static byte[] Prepend(byte[] a, byte b)
-        {
-            if (a == null)
-                return new byte[] { b };
-
-            int length = a.Length;
-            byte[] result = new byte[length + 1];
-            Array.Copy(a, 0, result, 1, length);
-            result[0] = b;
-            return result;
-        }
-
-        public static short[] Prepend(short[] a, short b)
-        {
-            if (a == null)
-                return new short[] { b };
-
-            int length = a.Length;
-            short[] result = new short[length + 1];
-            Array.Copy(a, 0, result, 1, length);
-            result[0] = b;
-            return result;
-        }
-
-        public static int[] Prepend(int[] a, int b)
-        {
-            if (a == null)
-                return new int[] { b };
-
-            int length = a.Length;
-            int[] result = new int[length + 1];
-            Array.Copy(a, 0, result, 1, length);
-            result[0] = b;
-            return result;
-        }
-
-        public static byte[] Reverse(byte[] a)
-        {
-            if (a == null)
-                return null;
-
-            int p1 = 0, p2 = a.Length;
-            byte[] result = new byte[p2];
-
-            while (--p2 >= 0)
-            {
-                result[p2] = a[p1++];
-            }
-
-            return result;
-        }
-
-        public static int[] Reverse(int[] a)
-        {
-            if (a == null)
-                return null;
-
-            int p1 = 0, p2 = a.Length;
-            int[] result = new int[p2];
-
-            while (--p2 >= 0)
-            {
-                result[p2] = a[p1++];
-            }
-
-            return result;
-        }
     }
 
     public class SecureRandom
@@ -4396,7 +3709,7 @@ internal static readonly int[][] primeLists = new int[][]
 
         private static DigestRandomGenerator CreatePrng(string digestName, bool autoSeed)
         {
-            IDigest digest = DigestUtilities.GetDigest(digestName);
+            IDigest digest = DigestUtilities.GetDigest();
             if (digest == null)
                 return null;
             DigestRandomGenerator prng = new DigestRandomGenerator(digest);
@@ -4446,27 +3759,11 @@ internal static readonly int[][] primeLists = new int[][]
             throw new ArgumentException("Unrecognised PRNG algorithm: " + algorithm, "algorithm");
         }
 
-        [Obsolete("Call GenerateSeed() on a SecureRandom instance instead")]
-        public static byte[] GetSeed(int length)
-        {
-            return GetNextBytes(Master, length);
-        }
-
         protected readonly IRandomGenerator generator;
 
         public SecureRandom()
             : this(CreatePrng("SHA256", true))
         {
-        }
-
-        /// <remarks>
-        /// To replicate existing predictable output, replace with GetInstance("SHA1PRNG", false), followed by SetSeed(seed)
-        /// </remarks>
-        [Obsolete("Use GetInstance/SetSeed instead")]
-        public SecureRandom(byte[] seed)
-            : this(CreatePrng("SHA1", false))
-        {
-            SetSeed(seed);
         }
 
         /// <summary>Use the specified instance of IRandomGenerator as random source.</summary>
@@ -4567,7 +3864,7 @@ internal static readonly int[][] primeLists = new int[][]
             generator.NextBytes(buf, off, len);
         }
 
-        private static readonly double DoubleScale = System.Math.Pow(2.0, 64.0);
+        private static readonly double DoubleScale = Math.Pow(2.0, 64.0);
 
         public override double NextDouble()
         {
@@ -4805,7 +4102,7 @@ internal static readonly int[][] primeLists = new int[][]
 
         public CryptoApiRandomGenerator(RandomNumberGenerator rng)
         {
-            this.rndProv = rng;
+            rndProv = rng;
         }
 
         #region IRandomGenerator Members
@@ -4861,44 +4158,23 @@ internal static readonly int[][] primeLists = new int[][]
     {
         private enum DigestAlgorithm
         {
-            BLAKE2B_160, BLAKE2B_256, BLAKE2B_384, BLAKE2B_512,
-            BLAKE2S_128, BLAKE2S_160, BLAKE2S_224, BLAKE2S_256,
-            DSTU7564_256, DSTU7564_384, DSTU7564_512,
-            GOST3411,
-            GOST3411_2012_256, GOST3411_2012_512,
-            KECCAK_224, KECCAK_256, KECCAK_288, KECCAK_384, KECCAK_512,
-            MD2, MD4, MD5,
-            RIPEMD128, RIPEMD160, RIPEMD256, RIPEMD320,
-            SHA_1, SHA_224, SHA_256, SHA_384, SHA_512,
-            SHA_512_224, SHA_512_256,
-            SHA3_224, SHA3_256, SHA3_384, SHA3_512,
-            SHAKE128, SHAKE256,
-            SM3,
-            TIGER,
-            WHIRLPOOL,
+            SHA_256
         };
-
-        private DigestUtilities()
-        {
-        }
 
         private static readonly IDictionary algorithms = Platform.CreateHashtable();
         private static readonly IDictionary oids = Platform.CreateHashtable();
-
 
         public static ICollection Algorithms
         {
             get { return oids.Keys; }
         }
 
-        public static IDigest GetDigest(
-            string algorithm)
+        // Reduced functionality GetDigest, only needs sha256 for CreatePRNG() method
+        public static IDigest GetDigest()
         {
-            Sha256Digest sha256 = new Sha256Digest();
-            return (IDigest)sha256;
+            return new Sha256Digest();
         }
     }
-
 
     public class Sha256Digest
         : GeneralDigest

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-//using Org.BouncyCastle.Math;
 using Makwa.BigInt;
-//using Org.BouncyCastle.Security;
 
 namespace Makwa
 {
@@ -18,13 +16,13 @@ namespace Makwa
             try
             {
                 Stream input = new MemoryStream(encoded);
-                int magic = MakwaIO.Read32(input);
-                if (magic != MakwaIO.MAGIC_PRIVKEY)
+                int magic = IO.Read32(input);
+                if (magic != IO.MAGIC_PRIVKEY)
                 {
                     throw new Exception("not an encoded Makwa private key");
                 }
-                BigInteger p = MakwaIO.ReadMPI(input);
-                BigInteger q = MakwaIO.ReadMPI(input);
+                BigInteger p = IO.ReadMPI(input);
+                BigInteger q = IO.ReadMPI(input);
                 long len = input.Length;
                 byte[] arr = new byte[len];
 
@@ -60,9 +58,6 @@ namespace Makwa
             }
             if (p.CompareTo(q) < 0)
             {
-                // We normally want the first prime to be the
-                // largest of the two. This can help some
-                // implementations of the CRT.
                 BigInteger t = p;
                 p = q;
                 q = t;
@@ -80,8 +75,6 @@ namespace Makwa
             }
             catch (ArithmeticException ae)
             {
-                // This cannot happen if p and q are distinct
-                // and both prime, as they should.
                 throw new Exception(ae.ToString());
             }
         }
@@ -89,7 +82,7 @@ namespace Makwa
         /// <summary>
         /// Get the modulus (public key).
         /// </summary>
-        /// <returns>  the Makwa modulus </returns>
+        /// <returns>  The Makwa modulus </returns>
         public virtual BigInteger Modulus
         {
             get
@@ -134,10 +127,10 @@ namespace Makwa
         {
             try
             {
-                System.IO.MemoryStream output = new System.IO.MemoryStream();
-                MakwaIO.Write32(output, MakwaIO.MAGIC_PRIVKEY);
-                MakwaIO.WriteMPI(output, p);
-                MakwaIO.WriteMPI(output, q);
+                MemoryStream output = new System.IO.MemoryStream();
+                IO.Write32(output, IO.MAGIC_PRIVKEY);
+                IO.WriteMPI(output, p);
+                IO.WriteMPI(output, q);
                 return output.ToArray();
             }
             catch (IOException ioe)
@@ -165,9 +158,9 @@ namespace Makwa
         {
             try
             {
-                System.IO.MemoryStream output = new System.IO.MemoryStream();
-                MakwaIO.Write32(output, MakwaIO.MAGIC_PUBKEY);
-                MakwaIO.WriteMPI(output, modulus);
+                MemoryStream output = new MemoryStream();
+                IO.Write32(output, IO.MAGIC_PUBKEY);
+                IO.WriteMPI(output, modulus);
                 return output.ToArray();
             }
             catch (IOException ioe)
@@ -187,13 +180,13 @@ namespace Makwa
         {
             try
             {
-                System.IO.Stream input = new System.IO.MemoryStream(encoded);
-                int magic = MakwaIO.Read32(input);
-                if (magic != MakwaIO.MAGIC_PUBKEY)
+                Stream input = new MemoryStream(encoded);
+                int magic = IO.Read32(input);
+                if (magic != IO.MAGIC_PUBKEY)
                 {
                     throw new Exception("not an encoded Makwa modulus");
                 }
-                BigInteger mod = MakwaIO.ReadMPI(input);
+                BigInteger mod = IO.ReadMPI(input);
                 long len = input.Length;
                 byte[] arr = new byte[len];
                 if (input.Read(arr, 0, (int)len) >= 0)

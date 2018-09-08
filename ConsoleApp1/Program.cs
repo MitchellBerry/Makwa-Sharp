@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using Makwa.BigInt;
 using CommandLine;
-//using Org.BouncyCastle.Math;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 

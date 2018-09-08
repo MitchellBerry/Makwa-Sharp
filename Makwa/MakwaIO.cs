@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
-//using Org.BouncyCastle.Math;
 using Makwa.BigInt;
 
 namespace Makwa
 {
-	internal sealed class MakwaIO
+
+
+
+	internal sealed class IO
 	{
 		internal const int MAGIC_PUBKEY = 0x55414D30;
 		internal const int MAGIC_PRIVKEY = 0x55414D31;
@@ -63,7 +65,7 @@ namespace Makwa
 			output.WriteByte((byte)(x));
 		}
 
-		internal static void ReadAll(System.IO.Stream input, byte[] buf, int off, int len)
+		internal static void ReadAll(Stream input, byte[] buf, int off, int len)
 		{
 			while (len > 0)
 			{
@@ -103,7 +105,7 @@ namespace Makwa
 			output.Write(buf, off, len);
 		}
 
-		internal static BigInteger ReadMPI(System.IO.Stream input)
+		internal static BigInteger ReadMPI(Stream input)
 		{
 			int len = Read16(input);
 			byte[] buf = new byte[len];
