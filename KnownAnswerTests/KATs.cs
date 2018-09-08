@@ -241,12 +241,12 @@ namespace Testing
             public List<Dictionary<String, String>> ModSHA512 = new List<Dictionary<String, String>>();
         }
 
-        public static KnownAnswerTests ParseKATFile(string filepath = "kat.txt")
+        public static KnownAnswerTests ParseKATFile()
         {
             try
             {
                 string solutionPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\"));
-                string[] lines = File.ReadAllLines(Path.Combine(solutionPath, filepath));
+                string[] lines = File.ReadAllLines(Path.Combine(solutionPath, "kat.txt"));
                 KnownAnswerTests KATs = new KnownAnswerTests();
 
                 // Initialise regexes
