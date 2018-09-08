@@ -4,9 +4,6 @@ using Makwa.BigInt;
 
 namespace Makwa
 {
-
-
-
 	internal sealed class IO
 	{
 		internal const int MAGIC_PUBKEY = 0x55414D30;
