@@ -1,12 +1,28 @@
-﻿using System;
+﻿/*
+The Bouncy Castle License
+Copyright (c) 2000-2018 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org)
+Copyright (c) 2018 Mitchell Berry
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sub license, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+*/
+
+using System;
+using System.IO;
+using System.Text;
+using System.Threading;
 using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
 using static Makwa.BigInt.DigestRandomGenerator;
+
+
 
 namespace Makwa.BigInt
 {
@@ -39,8 +55,8 @@ namespace Makwa.BigInt
             1231 1237 1249 1259 1277 1279 1283 1289
         */
 
-        // Each list has a product < 2^31
-        internal static readonly int[][] primeLists = new int[][]
+// Each list has a product < 2^31
+internal static readonly int[][] primeLists = new int[][]
         {
             new int[]{ 3, 5, 7, 11, 13, 17, 19, 23 },
             new int[]{ 29, 31, 37, 41, 43 },
@@ -194,8 +210,11 @@ namespace Makwa.BigInt
 
         static BigInteger()
         {
-            Zero = new BigInteger(0, ZeroMagnitude, false);
-            Zero.nBits = 0; Zero.nBitLength = 0;
+            Zero = new BigInteger(0, ZeroMagnitude, false)
+            {
+                nBits = 0,
+                nBitLength = 0
+            };
 
             SMALL_CONSTANTS[0] = Zero;
             for (uint i = 1; i < SMALL_CONSTANTS.Length; ++i)
@@ -1243,8 +1262,7 @@ namespace Makwa.BigInt
             if (obj == this)
                 return true;
 
-            BigInteger biggie = obj as BigInteger;
-            if (biggie == null)
+            if (!(obj is BigInteger biggie))
                 return false;
 
             return sign == biggie.sign && IsEqualMagnitude(biggie);
@@ -1309,7 +1327,7 @@ namespace Makwa.BigInt
                 return One;
 
             if (this.sign < 0)
-                return new BigInteger(-1, doSubBigLil(this.magnitude, One.magnitude), true);
+                return new BigInteger(-1, DoSubBigLil(this.magnitude, One.magnitude), true);
 
             return AddToMagnitude(One.magnitude);
         }
@@ -1381,25 +1399,7 @@ namespace Makwa.BigInt
                     }
                 }
             }
-
-
-            // TODO Special case for < 10^16 (RabinMiller fixed list)
-            //			if (BitLength < 30)
-            //			{
-            //				RabinMiller against 2, 3, 5, 7, 11, 13, 23 is sufficient
-            //			}
-
-
-            // TODO Is it worth trying to create a hybrid of these two?
             return RabinMillerTest(certainty, random, randomlySelected);
-            //			return SolovayStrassenTest(certainty, random);
-
-            //			bool rbTest = RabinMillerTest(certainty, random);
-            //			bool ssTest = SolovayStrassenTest(certainty, random);
-            //
-            //			Debug.Assert(rbTest == ssTest);
-            //
-            //			return rbTest;
         }
 
         public bool RabinMillerTest(int certainty, Random random)
@@ -1531,8 +1531,7 @@ namespace Makwa.BigInt
             }
 
             BigInteger d = this.Remainder(m);
-            BigInteger x;
-            BigInteger gcd = ExtEuclid(d, m, out x);
+            BigInteger gcd = ExtEuclid(d, m, out BigInteger x);
 
             if (!gcd.Equals(One))
                 throw new ArithmeticException("Numbers not relatively prime.");
@@ -2936,10 +2935,10 @@ namespace Makwa.BigInt
                 lilun = n;
             }
 
-            return new BigInteger(this.sign * compare, doSubBigLil(bigun.magnitude, lilun.magnitude), true);
+            return new BigInteger(this.sign * compare, DoSubBigLil(bigun.magnitude, lilun.magnitude), true);
         }
 
-        private static int[] doSubBigLil(
+        private static int[] DoSubBigLil(
             int[] bigMag,
             int[] lilMag)
         {
@@ -3954,7 +3953,6 @@ namespace Makwa.BigInt
             return hc;
         }
 
-        [CLSCompliantAttribute(false)]
         public static int GetHashCode(uint[] data)
         {
             if (data == null)
@@ -3972,7 +3970,7 @@ namespace Makwa.BigInt
             return hc;
         }
 
-        [CLSCompliantAttribute(false)]
+        
         public static int GetHashCode(uint[] data, int off, int len)
         {
             if (data == null)
@@ -3990,7 +3988,7 @@ namespace Makwa.BigInt
             return hc;
         }
 
-        [CLSCompliantAttribute(false)]
+        
         public static int GetHashCode(ulong[] data)
         {
             if (data == null)
@@ -4011,7 +4009,7 @@ namespace Makwa.BigInt
             return hc;
         }
 
-        [CLSCompliantAttribute(false)]
+        
         public static int GetHashCode(ulong[] data, int off, int len)
         {
             if (data == null)
@@ -4070,14 +4068,14 @@ namespace Makwa.BigInt
             return data == null ? null : (long[])data.Clone();
         }
 
-        [CLSCompliantAttribute(false)]
+        
         public static ulong[] Clone(
             ulong[] data)
         {
             return data == null ? null : (ulong[])data.Clone();
         }
 
-        [CLSCompliantAttribute(false)]
+        
         public static ulong[] Clone(
             ulong[] data,
             ulong[] existing)
@@ -4613,7 +4611,7 @@ namespace Makwa.BigInt
         private long seedCounter;
         private IDigest digest;
         private byte[] state;
-        private byte[] seed;
+        private readonly byte[] seed;
 
         public DigestRandomGenerator(
             IDigest digest)
@@ -4851,7 +4849,7 @@ namespace Makwa.BigInt
 
     public sealed class Times
     {
-        private static long NanosecondsPerTick = 100L;
+        private static readonly long NanosecondsPerTick = 100L;
 
         public static long NanoTime()
         {
@@ -4913,7 +4911,7 @@ namespace Makwa.BigInt
 
         public Sha256Digest()
         {
-            initHs();
+            InitHs();
         }
 
         /**
@@ -5003,13 +5001,13 @@ namespace Makwa.BigInt
         {
             base.Reset();
 
-            initHs();
+            InitHs();
 
             xOff = 0;
             Array.Clear(X, 0, X.Length);
         }
 
-        private void initHs()
+        private void InitHs()
         {
             /* SHA-256 initial hash value
             * The first 32 bits of the fractional parts of the square roots
@@ -5134,35 +5132,6 @@ namespace Makwa.BigInt
             return (((x >> 2) | (x << 30)) ^ ((x >> 13) | (x << 19)) ^ ((x >> 22) | (x << 10)))
                 + ((x & y) ^ (x & z) ^ (y & z));
         }
-
-        //		/* SHA-256 functions */
-        //        private static uint Ch(
-        //            uint    x,
-        //            uint    y,
-        //            uint    z)
-        //        {
-        //            return ((x & y) ^ ((~x) & z));
-        //        }
-        //
-        //        private static uint Maj(
-        //            uint	x,
-        //            uint    y,
-        //            uint    z)
-        //        {
-        //            return ((x & y) ^ (x & z) ^ (y & z));
-        //        }
-        //
-        //        private static uint Sum0(
-        //            uint x)
-        //        {
-        //	        return ((x >> 2) | (x << 30)) ^ ((x >> 13) | (x << 19)) ^ ((x >> 22) | (x << 10));
-        //        }
-        //
-        //        private static uint Sum1(
-        //            uint x)
-        //        {
-        //	        return ((x >> 6) | (x << 26)) ^ ((x >> 11) | (x << 21)) ^ ((x >> 25) | (x << 7));
-        //        }
 
         private static uint Theta0(
             uint x)
