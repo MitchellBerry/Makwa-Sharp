@@ -13,50 +13,6 @@ namespace CLI
         static public string filepath = "modulus";
         static readonly BigInteger four = new BigInteger("4");
         static readonly BigInteger three = new BigInteger("3");
-
-        static byte[] GetModulus(string path = null)
-        {
-            if (path == null) { path = filepath; }
-            if (File.Exists(path))
-            {
-                try
-                {
-                     return File.ReadAllBytes(filepath);
-                }
-                catch (IOException)
-                {
-                    throw new IOException("Error Reading File: " + filepath);
-                }
-            }
-            else
-            {
-                return CreateNewModulus();
-            }
-        }
-
-        static byte[] CreateNewModulus(int length = 2048, string path = null)
-        {
-            MakwaPrivateKey privateKey = MakwaPrivateKey.Generate(length);
-            byte[] modulus = Tools.I2OSP(privateKey.Modulus);
-            if (path == null)
-            {
-                path = filepath;
-            }
-            WriteToFile(path, modulus);
-            return modulus;
-        }
-
-        static void WriteToFile(string filepath, byte[] data)
-        {
-            try
-            {
-            File.WriteAllBytes(filepath, data);
-            }
-            catch (IOException)
-            {
-                throw new IOException("Error writing to file: " + filepath);
-            }
-        }
         
         static void Main()
         {
@@ -87,7 +43,7 @@ namespace CLI
         {
             Hasher makwa = new Hasher
             {
-                Modulus = GetModulus(opts.Modulus),
+                Modulus = FileIO.GetModulus(opts.Modulus),
                 Prehashing = opts.Pre,
                 Posthashing = opts.Post,
                 Workfactor = opts.WorkFactor
@@ -128,7 +84,6 @@ namespace CLI
     }
 
 
-
     class Options
     {
         [Value(0, MetaName = "Password", HelpText = "Password to be hashed", Required =true)]
@@ -151,7 +106,7 @@ namespace CLI
         public bool SHA512 { get; set; }
 
         [Option('m', "modulus", HelpText = "Specifies a filepath for" +
-            " an encoded BigInteger modulus, returns an error if doesn't exist")]
+            " an encoded BigInteger modulus")]
         public string Modulus { get; set; }
 
         [Option('v', "verify", HelpText = "Will verify the password against a hash")]

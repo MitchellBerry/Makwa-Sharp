@@ -4,6 +4,83 @@ using Makwa.BigInt;
 
 namespace Makwa
 {
+    public class FileIO
+    {
+        public static string ModulusFilePath { get; set; } = "modulus";
+
+        public static byte[] GetModulus(string path = null)
+        {
+            if (path == null) { path = ModulusFilePath; }
+            if (File.Exists(path))
+            {
+                try
+                {
+                    return File.ReadAllBytes(ModulusFilePath);
+                }
+                catch (IOException)
+                {
+                    throw new IOException("Error Reading File: " + ModulusFilePath);
+                }
+            }
+            else
+            {
+                return CreateNewModulus(path);
+            }
+        }
+
+        /// <summary>
+        ///  Creates a new modulus
+        /// </summary>
+        /// <param name="path">filepath where modulus is written, default is</param>
+        /// <param name="length">modulus length in bits</param>
+        /// <returns></returns>
+        static byte[] CreateNewModulus(string path, int length = 2048)
+        {
+            MakwaPrivateKey privateKey = MakwaPrivateKey.Generate(length);
+            byte[] modulus = Tools.I2OSP(privateKey.Modulus);
+            WriteToFile(path, modulus);
+            return modulus;
+        }
+
+        /// <summary>
+        /// Creates a new private key class, writes modulus and primes p,q to file
+        /// </summary>
+        /// <param name="path">
+        /// filepath, primes are appended with "-p" and "-q" respectively
+        /// </param>
+        /// <param name="length">modulus length in bits, default is 2048</param>
+        /// <returns>MakwaPrivateKey</returns>
+        static MakwaPrivateKey CreateNewPrivateKey (string path, int length = 2048)
+        {
+            MakwaPrivateKey privateKey = MakwaPrivateKey.Generate(length);
+            byte[] modulus = Tools.I2OSP(privateKey.Modulus);
+            byte[] p = Tools.I2OSP(privateKey.p);
+            byte[] q = Tools.I2OSP(privateKey.q);
+            WriteToFile(path, modulus);
+            WriteToFile(path + "-p", p);
+            WriteToFile(path + "-q", q);
+            return privateKey;
+        }
+
+        /// <summary>
+        /// Writes binary key data to file
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <param name="data"></param>
+        static void WriteToFile(string filepath, byte[] data)
+        {
+            try
+            {
+                File.WriteAllBytes(filepath, data);
+            }
+            catch (IOException)
+            {
+                throw new IOException("Error writing to file: " + 
+                    Environment.CurrentDirectory  + "\\" + filepath);
+            }
+        }
+
+    }
 	internal sealed class IO
 	{
 		internal const int MAGIC_PUBKEY = 0x55414D30;

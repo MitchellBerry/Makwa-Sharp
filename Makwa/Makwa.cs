@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 
 namespace Makwa
 {
-
     public class Tools
     {
         /// <summary>
@@ -206,6 +205,7 @@ namespace Makwa
         public uint Workfactor { get; set; } = 4096;
         public bool Prehashing { get; set; } = true;
         public ushort Posthashing { get; set; } = 12;
+        RNGCryptoServiceProvider RNG = new RNGCryptoServiceProvider();
         public byte[] ModulusID { get; set; }
         public string ModulusChecksum { get; set; }
         private byte[] _Modulus;
@@ -223,6 +223,11 @@ namespace Makwa
             }
         }
 
+        
+        public static Hasher Create(string moduluspath = null)
+        {
+            return new Hasher() { Modulus = FileIO.GetModulus(moduluspath) };
+        }
 
         /// <summary>
         /// Parses a formatted hash string and extracts the parameters used to
@@ -338,8 +343,7 @@ namespace Makwa
             if (salt == null)
             {
                 byte[] buffer = new byte[16];
-                RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
-                rng.GetBytes(buffer);
+                RNG.GetBytes(buffer);
                 salt = buffer;
             }
             if (salt.Length != 16)
