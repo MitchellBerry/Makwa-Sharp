@@ -54,6 +54,63 @@ namespace Testing
             Assert.IsTrue(outcome);
         }
 
+        [TestMethod]
+        public void SHA256DigestWorkFactor384()
+        {
+            bool outcome = TestDigest(new HMACSHA256(), 384, kats.ModSHA256);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA256DigestWorkFactor4096()
+        {
+            bool outcome = TestDigest(new HMACSHA256(), 4096, kats.ModSHA256);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA512DigestWorkFactor384()
+        {
+            bool outcome = TestDigest(new HMACSHA512(), 384, kats.ModSHA512);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA512DigestWorkFactor4096()
+        {
+            bool outcome = TestDigest(new HMACSHA512(), 4096, kats.ModSHA512);
+            Assert.IsTrue(outcome);
+        }
+
+
+        [TestMethod]
+        public void SHA256HashPassword384()
+        {
+            bool outcome = TestHashPassword(new HMACSHA256(), 384, kats.ModSHA256);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA256HashPassword4096()
+        {
+            bool outcome = TestHashPassword(new HMACSHA256(), 4096, kats.ModSHA256);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA512HashPassword384()
+        {
+            bool outcome = TestHashPassword(new HMACSHA512(), 384, kats.ModSHA512);
+            Assert.IsTrue(outcome);
+        }
+
+        [TestMethod]
+        public void SHA512HashPassword4096()
+        {
+            bool outcome = TestHashPassword(new HMACSHA512(), 4096, kats.ModSHA512);
+            Assert.IsTrue(outcome);
+        }
+
         bool TestKDF(HMAC hashfunction, List<Dictionary<String, String>> kats)
         {
             hasher.Hashfunction = hashfunction;
@@ -123,34 +180,6 @@ namespace Testing
             return outcome;
         }
 
-        [TestMethod]
-        public void SHA256DigestWorkFactor384()
-        {
-            bool outcome = TestDigest(new HMACSHA256(), 384, kats.ModSHA256);
-            Assert.IsTrue(outcome);
-        }
-
-        [TestMethod]
-        public void SHA256DigestWorkFactor4096()
-        {
-            bool outcome = TestDigest(new HMACSHA256(), 4096, kats.ModSHA256);
-            Assert.IsTrue(outcome);
-        }
-
-        [TestMethod]
-        public void SHA512DigestWorkFactor384()
-        {
-            bool outcome = TestDigest(new HMACSHA512(), 384, kats.ModSHA512);
-            Assert.IsTrue(outcome);
-        }
-
-        [TestMethod]
-        public void SHA512DigestWorkFactor4096()
-        {
-            bool outcome = TestDigest(new HMACSHA512(), 4096, kats.ModSHA512);
-            Assert.IsTrue(outcome);
-        }
-
         bool TestHashPassword(HMAC hashfunction, uint workfactor, List<Dictionary<String, String>> kats)
         {
             hasher.Hashfunction = hashfunction;
@@ -194,34 +223,6 @@ namespace Testing
             return outcome;
         }
 
-        [TestMethod]
-        public void SHA256HashPassword384()
-        {
-            bool outcome = TestHashPassword(new HMACSHA256(), 384, kats.ModSHA256);
-            Assert.IsTrue(outcome);
-        }
-
-        [TestMethod]
-        public void SHA256HashPassword4096()
-        {
-            bool outcome = TestHashPassword(new HMACSHA256(), 4096, kats.ModSHA256);
-            Assert.IsTrue(outcome);
-        }
-
-        [TestMethod]
-        public void SHA512HashPassword384()
-        {
-            bool outcome = TestHashPassword(new HMACSHA512(), 384, kats.ModSHA512);
-            Assert.IsTrue(outcome);
-        }
-
-        [TestMethod]
-        public void SHA512HashPassword4096()
-        {
-            bool outcome = TestHashPassword(new HMACSHA512(), 4096, kats.ModSHA512);
-            Assert.IsTrue(outcome);
-        }
-
         void WriteTestTraces(int testcounter, string input, string expected, string result)
         {
             Trace.WriteLine("Tests Run Before Failure: " + testcounter);
@@ -244,7 +245,8 @@ namespace Testing
         {
             try
             {
-                string[] lines = File.ReadAllLines(filepath);
+                string solutionPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\"));
+                string[] lines = File.ReadAllLines(Path.Combine(solutionPath, filepath));
                 KnownAnswerTests KATs = new KnownAnswerTests();
 
                 // Initialise regexes
@@ -335,7 +337,9 @@ namespace Testing
             }
             catch (FileNotFoundException)
             {
-                throw new FileNotFoundException("No KAT file");
+                
+                throw new FileNotFoundException("No KAT file, kat.txt can be found online " +
+                    "at https://github.com/bsdphk/PHC/blob/master/Makwa/kat.txt");
             }
         }
     }
