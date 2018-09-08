@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
-using Org.BouncyCastle.Math;
+//using Org.BouncyCastle.Math;
+using Makwa.BigInt;
 
 namespace Makwa
 {
