@@ -1363,7 +1363,7 @@ namespace Makwa.BigInt
 
 
             // Try to reduce the penalty for really small numbers
-            int numLists = System.Math.Min(BitLength - 1, primeLists.Length);
+            int numLists = Math.Min(BitLength - 1, primeLists.Length);
 
             for (int i = 0; i < numLists; ++i)
             {
@@ -1425,7 +1425,7 @@ namespace Makwa.BigInt
 
                 if (certainty < 100)
                 {
-                    iterations = System.Math.Min(itersFor100Cert, iterations);
+                    iterations = Math.Min(itersFor100Cert, iterations);
                 }
                 else
                 {
@@ -1477,95 +1477,6 @@ namespace Makwa.BigInt
             return true;
         }
 
-        //		private bool SolovayStrassenTest(
-        //			int		certainty,
-        //			Random	random)
-        //		{
-        //			Debug.Assert(certainty > 0);
-        //			Debug.Assert(CompareTo(Two) > 0);
-        //			Debug.Assert(TestBit(0));
-        //
-        //			BigInteger n = this;
-        //			BigInteger nMinusOne = n.Subtract(One);
-        //			BigInteger e = nMinusOne.ShiftRight(1);
-        //
-        //			do
-        //			{
-        //				BigInteger a;
-        //				do
-        //				{
-        //					a = new BigInteger(nBitLength, random);
-        //				}
-        //				// NB: Spec says 0 < x < n, but 1 is trivial
-        //				while (a.CompareTo(One) <= 0 || a.CompareTo(n) >= 0);
-        //
-        //
-        //				// TODO Check this is redundant given the way Jacobi() works?
-        ////				if (!a.Gcd(n).Equals(One))
-        ////					return false;
-        //
-        //				int x = Jacobi(a, n);
-        //
-        //				if (x == 0)
-        //					return false;
-        //
-        //				BigInteger check = a.ModPow(e, n);
-        //
-        //				if (x == 1 && !check.Equals(One))
-        //					return false;
-        //
-        //				if (x == -1 && !check.Equals(nMinusOne))
-        //					return false;
-        //
-        //				--certainty;
-        //			}
-        //			while (certainty > 0);
-        //
-        //			return true;
-        //		}
-        //
-        //		private static int Jacobi(
-        //			BigInteger	a,
-        //			BigInteger	b)
-        //		{
-        //			Debug.Assert(a.sign >= 0);
-        //			Debug.Assert(b.sign > 0);
-        //			Debug.Assert(b.TestBit(0));
-        //			Debug.Assert(a.CompareTo(b) < 0);
-        //
-        //			int totalS = 1;
-        //			for (;;)
-        //			{
-        //				if (a.sign == 0)
-        //					return 0;
-        //
-        //				if (a.Equals(One))
-        //					break;
-        //
-        //				int e = a.GetLowestSetBit();
-        //
-        //				int bLsw = b.magnitude[b.magnitude.Length - 1];
-        //				if ((e & 1) != 0 && ((bLsw & 7) == 3 || (bLsw & 7) == 5))
-        //					totalS = -totalS;
-        //
-        //				// TODO Confirm this is faster than later a1.Equals(One) test
-        //				if (a.BitLength == e + 1)
-        //					break;
-        //				BigInteger a1 = a.ShiftRight(e);
-        ////				if (a1.Equals(One))
-        ////					break;
-        //
-        //				int a1Lsw = a1.magnitude[a1.magnitude.Length - 1];
-        //				if ((bLsw & 3) == 3 && (a1Lsw & 3) == 3)
-        //					totalS = -totalS;
-        //
-        ////				a = b.Mod(a1);
-        //				a = b.Remainder(a1);
-        //				b = a1;
-        //			}
-        //			return totalS;
-        //		}
-
         public long LongValue
         {
             get
@@ -1613,44 +1524,6 @@ namespace Makwa.BigInt
         {
             if (m.sign < 1)
                 throw new ArithmeticException("Modulus must be positive");
-
-            // TODO Too slow at the moment
-            //			// "Fast Key Exchange with Elliptic Curve Systems" R.Schoeppel
-            //			if (m.TestBit(0))
-            //			{
-            //				//The Almost Inverse Algorithm
-            //				int k = 0;
-            //				BigInteger B = One, C = Zero, F = this, G = m, tmp;
-            //
-            //				for (;;)
-            //				{
-            //					// While F is even, do F=F/u, C=C*u, k=k+1.
-            //					int zeroes = F.GetLowestSetBit();
-            //					if (zeroes > 0)
-            //					{
-            //						F = F.ShiftRight(zeroes);
-            //						C = C.ShiftLeft(zeroes);
-            //						k += zeroes;
-            //					}
-            //
-            //					// If F = 1, then return B,k.
-            //					if (F.Equals(One))
-            //					{
-            //						BigInteger half = m.Add(One).ShiftRight(1);
-            //						BigInteger halfK = half.ModPow(BigInteger.ValueOf(k), m);
-            //						return B.Multiply(halfK).Mod(m);
-            //					}
-            //
-            //					if (F.CompareTo(G) < 0)
-            //					{
-            //						tmp = G; G = F; F = tmp;
-            //						tmp = B; B = C; C = tmp;
-            //					}
-            //
-            //					F = F.Add(G);
-            //					B = B.Add(C);
-            //				}
-            //			}
 
             if (m.QuickPow2Check())
             {
@@ -4512,41 +4385,6 @@ namespace Makwa.BigInt
         : Random
     {
         private static long counter = Times.NanoTime();
-
-#if NETCF_1_0 || PORTABLE
-        private static object counterLock = new object();
-        private static long NextCounterValue()
-        {
-            lock (counterLock)
-            {
-                return ++counter;
-            }
-        }
-
-        private static readonly SecureRandom[] master = { null };
-        private static SecureRandom Master
-        {
-            get
-            {
-                lock (master)
-                {
-                    if (master[0] == null)
-                    {
-                        SecureRandom sr = master[0] = GetInstance("SHA256PRNG", false);
-
-                        // Even though Ticks has at most 8 or 14 bits of entropy, there's no harm in adding it.
-                        sr.SetSeed(DateTime.Now.Ticks);
-
-                        // 32 will be enough when ThreadedSeedGenerator is fixed.  Until then, ThreadedSeedGenerator returns low
-                        // entropy, and this is not sufficient to be secure. http://www.bouncycastle.org/csharpdevmailarchive/msg00814.html
-                        sr.SetSeed(new ThreadedSeedGenerator().GenerateSeed(32, true));
-                    }
-
-                    return master[0];
-                }
-            }
-        }
-#else
         private static long NextCounterValue()
         {
             return Interlocked.Increment(ref counter);
@@ -4557,7 +4395,6 @@ namespace Makwa.BigInt
         {
             get { return master; }
         }
-#endif
 
         private static DigestRandomGenerator CreatePrng(string digestName, bool autoSeed)
         {
