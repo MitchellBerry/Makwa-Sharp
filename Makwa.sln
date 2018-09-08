@@ -5,19 +5,9 @@ VisualStudioVersion = 15.0.27130.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Makwa", "Makwa\Makwa.csproj", "{1C9A9863-D32A-4FB2-9B0E-2619177DFD52}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnownAnswerTests", "KnownAnswerTests\KnownAnswerTests.csproj", "{858944AD-4520-4547-8587-F141B301981A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F46BB283-DCBC-46A3-A45E-44FDEBC25558}"
-	ProjectSection(SolutionItems) = preProject
-		Performance1.psess = Performance1.psess
-	EndProjectSection
-EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -27,10 +17,6 @@ Global
 		{1C9A9863-D32A-4FB2-9B0E-2619177DFD52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C9A9863-D32A-4FB2-9B0E-2619177DFD52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C9A9863-D32A-4FB2-9B0E-2619177DFD52}.Release|Any CPU.Build.0 = Release|Any CPU
-		{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{75287CD6-2F82-4F1F-AE73-043E2DF77FDE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{858944AD-4520-4547-8587-F141B301981A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{858944AD-4520-4547-8587-F141B301981A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{858944AD-4520-4547-8587-F141B301981A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -41,5 +27,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8C4976D8-0D3D-47A4-804C-E609F7B482E3}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
