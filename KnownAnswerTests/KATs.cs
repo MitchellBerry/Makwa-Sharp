@@ -26,21 +26,6 @@ namespace Testing
         readonly byte[] n = Tools.HexStringToByteArray(nhex);
 
 
-        // Pops out random know answer tests from the list, max number is 1000
-        public KnownAnswerTests RandomKATsSubset(KnownAnswerTests kats, uint subsetLength = 200)
-        {
-            if (subsetLength >= 2000)
-            {
-                throw new ArgumentOutOfRangeException("Maximum number of KATs available is 2000");
-            }
-            Random rnd = new Random();
-            for (int i = 0; i < subsetLength; i++)
-            {
-                kats.ModSHA256.RemoveAt(rnd.Next(kats.ModSHA256.Count));
-                kats.ModSHA512.RemoveAt(rnd.Next(kats.ModSHA512.Count));
-            }
-            return kats;
-        }
 
         [TestMethod]
         public void TestKDF256()
@@ -346,10 +331,28 @@ namespace Testing
             }
             catch (FileNotFoundException)
             {
-                throw new FileNotFoundException("No KAT file, kat.txt can be found " +
-                    "at https://github.com/bsdphk/PHC/blob/master/Makwa/kat.txt. " +
+                throw new FileNotFoundException("No KAT file and unable to download," +
+                    " kat.txt can be found here:" +
+                    " https://github.com/bsdphk/PHC/blob/master/Makwa/kat.txt. " +
                     "Place in KnownAnswerTests folder");
             }
+        }
+
+        // Pops out random know answer tests from the list, max number is 1000
+        public KnownAnswerTests RandomKATsSubset(KnownAnswerTests kats, uint subsetLength = 200)
+        {
+            if (subsetLength >= 2000)
+            {
+                throw new ArgumentOutOfRangeException("Maximum number of KATs available is 2000");
+            }
+            subsetLength = 2000 - subsetLength;
+            Random rnd = new Random();
+            for (int i = 0; i < subsetLength; i++)
+            {
+                kats.ModSHA256.RemoveAt(rnd.Next(kats.ModSHA256.Count));
+                kats.ModSHA512.RemoveAt(rnd.Next(kats.ModSHA512.Count));
+            }
+            return kats;
         }
     }
 }
