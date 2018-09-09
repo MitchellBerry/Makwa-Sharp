@@ -1,6 +1,7 @@
 ﻿using Makwa;
 using System;
 using System.IO;
+using System.Net;
 using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ namespace Testing
     [TestClass]
     public class KATs
     {
+        readonly static string katpath = "kat.txt";
         KnownAnswerTests kats = ParseKATFile();
         Hasher hasher = new Hasher();
         static readonly string nhex = "C22C40BBD056BB213AAD7C830519101AB926AE18E3E9FC9699C806E0AE5C259414A01AC1D5" +
@@ -245,8 +247,15 @@ namespace Testing
         {
             try
             {
-                string solutionPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, @"..\..\"));
-                string[] lines = File.ReadAllLines(Path.Combine(solutionPath, "kat.txt"));
+                if (!File.Exists(katpath))
+                {
+                    using (WebClient client = new WebClient())
+                    {
+                        client.DownloadFile("https://raw.githubusercontent.com/bsdphk/PHC/master/Makwa/kat.txt",
+                            "kat.txt");
+                    }
+                }
+                string[] lines = File.ReadAllLines(katpath);
                 KnownAnswerTests KATs = new KnownAnswerTests();
 
                 // Initialise regexes
@@ -337,9 +346,9 @@ namespace Testing
             }
             catch (FileNotFoundException)
             {
-                
-                throw new FileNotFoundException("No KAT file, kat.txt can be found online " +
-                    "at https://github.com/bsdphk/PHC/blob/master/Makwa/kat.txt");
+                throw new FileNotFoundException("No KAT file, kat.txt can be found " +
+                    "at https://github.com/bsdphk/PHC/blob/master/Makwa/kat.txt. " +
+                    "Place in KnownAnswerTests folder");
             }
         }
     }
