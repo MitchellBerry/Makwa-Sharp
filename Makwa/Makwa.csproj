@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <Compile Remove="BigInteger.cs" />
-    <Compile Remove="tools.cs" />
   </ItemGroup>
 
   <ItemGroup>
