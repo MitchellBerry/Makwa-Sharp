@@ -14,18 +14,22 @@ namespace Testing
     [TestClass]
     public class KATs
     {
+        readonly static string katurl = "https://raw.githubusercontent.com/bsdphk/PHC/master/Makwa/kat.txt";
         readonly static string katpath = "kat.txt";
         KnownAnswerTests kats = ParseKATFile();
-        Hasher hasher = new Hasher();
-        static readonly string nhex = "C22C40BBD056BB213AAD7C830519101AB926AE18E3E9FC9699C806E0AE5C259414A01AC1D5" +
-            "2E873EC08046A68E344C8D74A508952842EF0F03F71A6EDC077FAA14899A79F83C3AE136F774FA6EB88F1D1AEA5" +
-            "EA02FC0CCAF96E2CE86F3490F4993B4B566C0079641472DEFC14BECCF48984A7946F1441EA144EA4C802A457550" +
-            "BA3DF0F14C090A75FE9E6A77CF0BE98B71D56251A86943E719D27865A489566C1DC57FCDEFACA6AB043F8E13F6C" +
-            "0BE7B39C92DA86E1D87477A189E73CE8E311D3D51361F8B00249FB3D8435607B14A1E70170F9AF36784110A3F2E" +
-            "67428FC18FB013B30FE6782AECB4428D7C8E354A0FBD061B01917C727ABEE0FE3FD3CEF761";
-        readonly byte[] n = Tools.HexStringToByteArray(nhex);
+        Hasher makwa = new Hasher();
 
-
+        /// Test parameters
+        /// Modulus n as given, page 45, https://www.bolet.org/makwa/makwa-spec-20150422.pdf
+        readonly byte[] n = Tools.HexStringToByteArray(
+            "C22C40BBD056BB213AAD7C830519101AB926AE18E3E9FC9699C806E0AE5C2594" +
+            "14A01AC1D52E873EC08046A68E344C8D74A508952842EF0F03F71A6EDC077FAA" +
+            "14899A79F83C3AE136F774FA6EB88F1D1AEA5EA02FC0CCAF96E2CE86F3490F49" +
+            "93B4B566C0079641472DEFC14BECCF48984A7946F1441EA144EA4C802A457550" +
+            "BA3DF0F14C090A75FE9E6A77CF0BE98B71D56251A86943E719D27865A489566C" +
+            "1DC57FCDEFACA6AB043F8E13F6C0BE7B39C92DA86E1D87477A189E73CE8E311D" +
+            "3D51361F8B00249FB3D8435607B14A1E70170F9AF36784110A3F2E67428FC18F" +
+            "B013B30FE6782AECB4428D7C8E354A0FBD061B01917C727ABEE0FE3FD3CEF761" );
 
         [TestMethod]
         public void TestKDF256()
@@ -69,7 +73,6 @@ namespace Testing
             Assert.IsTrue(outcome);
         }
 
-
         [TestMethod]
         public void SHA256HashPassword384()
         {
@@ -100,15 +103,15 @@ namespace Testing
 
         bool TestKDF(HMAC hashfunction, List<Dictionary<String, String>> kats)
         {
-            hasher.Hashfunction = hashfunction;
-            hasher.Modulus = n;
+            makwa.Hashfunction = hashfunction;
+            makwa.Modulus = n;
             bool outcome = false;
             int testcounter = 0;
             foreach (Dictionary<string, string> kdfkat in kats)
             {
                 string expected = kdfkat["output"];
                 byte[] inputbytes = Tools.HexStringToByteArray(kdfkat["input"]);
-                string result = BitConverter.ToString(hasher.KDF(inputbytes, 100)).Replace("-", "");
+                string result = BitConverter.ToString(makwa.KDF(inputbytes, 100)).Replace("-", "");
                 if (expected == result.ToLower())
                 {
                     outcome = true;
@@ -126,9 +129,9 @@ namespace Testing
 
         bool TestDigest(HMAC hashfuction, uint workfactor, List<Dictionary<String, String>> kats)
         {
-            hasher.Hashfunction = hashfuction;
-            hasher.Workfactor = workfactor;
-            hasher.Modulus = n;
+            makwa.Hashfunction = hashfuction;
+            makwa.Workfactor = workfactor;
+            makwa.Modulus = n;
             bool outcome = false;
             int testcounter = 0;
             foreach (Dictionary<string, string> digestkat in kats)
@@ -136,19 +139,19 @@ namespace Testing
 
                 byte[] input = Tools.HexStringToByteArray(digestkat["input"]);
                 byte[] salt = Tools.HexStringToByteArray(digestkat["salt"]);
-                hasher.Prehashing = Convert.ToBoolean(digestkat["pre-hashing"]);
+                makwa.Prehashing = Convert.ToBoolean(digestkat["pre-hashing"]);
                 if (digestkat["post-hashing"] == "false")
                 {
-                    hasher.Posthashing = 0;
+                    makwa.Posthashing = 0;
                 }
                 else
                 {
-                    hasher.Posthashing = Convert.ToUInt16(digestkat["post-hashing"]);
+                    makwa.Posthashing = Convert.ToUInt16(digestkat["post-hashing"]);
                 }
 
                 string binstring = "bin" + workfactor;
                 byte[] digestexpected = Tools.HexStringToByteArray(digestkat[binstring]);                
-                byte[] result = hasher.Digest(input, salt);
+                byte[] result = makwa.Digest(input, salt);
 
                 if (digestexpected.SequenceEqual<byte>(result))
                 {
@@ -169,8 +172,8 @@ namespace Testing
 
         bool TestHashPassword(HMAC hashfunction, uint workfactor, List<Dictionary<String, String>> kats)
         {
-            hasher.Hashfunction = hashfunction;
-            hasher.Workfactor = workfactor;
+            makwa.Hashfunction = hashfunction;
+            makwa.Workfactor = workfactor;
             bool outcome = false;
             int testcounter = 0;
             foreach (Dictionary<string, string> digestkat in kats)
@@ -178,20 +181,20 @@ namespace Testing
 
                 byte[] input = Tools.HexStringToByteArray(digestkat["input"]);
                 byte[] salt = Tools.HexStringToByteArray(digestkat["salt"]);
-                hasher.Prehashing = Convert.ToBoolean(digestkat["pre-hashing"]);
+                makwa.Prehashing = Convert.ToBoolean(digestkat["pre-hashing"]);
                 if (digestkat["post-hashing"] == "false")
                 {
-                    hasher.Posthashing = 0;
+                    makwa.Posthashing = 0;
                 }
                 else
                 {
-                    hasher.Posthashing = Convert.ToUInt16(digestkat["post-hashing"]);
+                    makwa.Posthashing = Convert.ToUInt16(digestkat["post-hashing"]);
                 }
 
                 string stringoutput = "str" + workfactor;
                 string digestexpected = digestkat[stringoutput];
-                hasher.Modulus = n;
-                string result = hasher.HashPassword(input, salt);
+                makwa.Modulus = n;
+                string result = makwa.HashPassword(input, salt);
 
                 if (digestexpected == result)
                 {
@@ -213,8 +216,8 @@ namespace Testing
         void WriteTestTraces(int testcounter, string input, string expected, string result)
         {
             Trace.WriteLine("Tests Run Before Failure: " + testcounter);
-            Trace.WriteLine("Pre: " + hasher.Prehashing);
-            Trace.WriteLine("Post: " + hasher.Posthashing);
+            Trace.WriteLine("Pre: " + makwa.Prehashing);
+            Trace.WriteLine("Post: " + makwa.Posthashing);
             Trace.WriteLine("Input: " + input);
             Trace.WriteLine("Result: " + expected);
             Trace.WriteLine("Expected bin384: " + result);
@@ -236,20 +239,23 @@ namespace Testing
                 {
                     using (WebClient client = new WebClient())
                     {
-                        client.DownloadFile("https://raw.githubusercontent.com/bsdphk/PHC/master/Makwa/kat.txt",
-                            "kat.txt");
+                        client.DownloadFile(katurl,"kat.txt");
                     }
                 }
                 string[] lines = File.ReadAllLines(katpath);
                 KnownAnswerTests KATs = new KnownAnswerTests();
 
                 // Initialise regexes
-                Regex KDF256regex = new Regex("KDF/SHA-256");
-                Regex KDF512regex = new Regex("KDF/SHA-512");
-                Regex modSHA256initialregex = new Regex("2048-bit modulus, SHA-256");
-                Regex modSHA512initialregex = new Regex("2048-bit modulus, SHA-512");
-                Regex modSHA256regex = new Regex(@"2048-bit modulus, SHA-256 input: ([a-f0-9]*) salt: ([a-f0-9]*) pre-hashing: (.*) post-hashing: (.*) bin384: ([a-f0-9]*) bin4096: ([a-f0-9]*) str384: ([A-Za-z0-9+/_]*) str4096: ([A-Za-z0-9+/_]*)");
-                Regex modSHA512regex = new Regex(@"2048-bit modulus, SHA-512 input: ([a-f0-9]*) salt: ([a-f0-9]*) pre-hashing: (.*) post-hashing: (.*) bin384: ([a-f0-9]*) bin4096: ([a-f0-9]*) str384: ([A-Za-z0-9+/_]*) str4096: ([A-Za-z0-9+/_]*)");
+                Regex kdf256regex = new Regex("KDF/SHA-256");
+                Regex kdf512regex = new Regex("KDF/SHA-512");
+                Regex modSHA256initregex = new Regex("2048-bit modulus, SHA-256");
+                Regex modSHA512initregex = new Regex("2048-bit modulus, SHA-512");
+                Regex modSHA256regex = new Regex(@"2048-bit modulus, SHA-256 input: ([a-f0-9]*)" +
+                    " salt: ([a-f0-9]*) pre-hashing: (.*) post-hashing: (.*) bin384: ([a-f0-9]*)" +
+                    " bin4096: ([a-f0-9]*) str384: ([A-Za-z0-9+/_]*) str4096: ([A-Za-z0-9+/_]*)");
+                Regex modSHA512regex = new Regex(@"2048-bit modulus, SHA-512 input: ([a-f0-9]*)" +
+                    " salt: ([a-f0-9]*) pre-hashing: (.*) post-hashing: (.*) bin384: ([a-f0-9]*)" +
+                    " bin4096: ([a-f0-9]*) str384: ([A-Za-z0-9+/_]*) str4096: ([A-Za-z0-9+/_]*)");
 
                 // Parse lines, seperate KATs into appropriate lists of dictionaries
                 for (int i = 0; i < lines.Length; i++)
@@ -257,7 +263,7 @@ namespace Testing
                     string line = lines[i];
 
                     // Check KAT type
-                    if (KDF256regex.Match(line).Success)
+                    if (kdf256regex.Match(line).Success)
                     {
                         var dict = new Dictionary<string, string>
                         {
@@ -267,7 +273,7 @@ namespace Testing
                         KATs.KDF256.Add(dict);
                     }
 
-                    else if (KDF512regex.Match(line).Success)
+                    else if (kdf512regex.Match(line).Success)
                     {
                         var dict = new Dictionary<string, string>
                         {
@@ -277,7 +283,7 @@ namespace Testing
                         KATs.KDF512.Add(dict);
                     }
 
-                    else if (modSHA256initialregex.Match(line).Success)
+                    else if (modSHA256initregex.Match(line).Success)
                     {
                         // Concatenate variables and extract regex captures
                         String concat = String.Join(" ", lines.Skip(i).Take(9));
@@ -299,7 +305,7 @@ namespace Testing
                         }
                     }
 
-                    else if (modSHA512initialregex.Match(line).Success)
+                    else if (modSHA512initregex.Match(line).Success)
                     {
                         String concat = String.Join(" ", lines.Skip(i).Take(9));
                         Match ModSHA512Match = modSHA512regex.Match(concat);
@@ -326,6 +332,7 @@ namespace Testing
                     //    dict.Add(katKeys[j], ModSHA512Match.Groups[j+1].ToString()); )
                     //}
 
+
                 }
                 return KATs;
             }
@@ -336,6 +343,7 @@ namespace Testing
                     " https://github.com/bsdphk/PHC/blob/master/Makwa/kat.txt. " +
                     "Place in KnownAnswerTests folder");
             }
+
         }
 
         // Pops out random know answer tests from the list, max number is 1000
@@ -354,5 +362,16 @@ namespace Testing
             }
             return kats;
         }
+
+        Dictionary<string, string> CreateKATDictionary(string hashfunction, Match regexMatch, int index)
+        {
+            string[] katKeys = { "input", "salt", "pre-hashing", "post-hashing", "bin384", "bin4096", "str384", "str4096" };
+            var dict = new Dictionary<string, string> { { "hashfunction", hashfunction } };
+            for (int j = 0; index < 8; index++)
+            {
+                dict.Add(katKeys[j], regexMatch.Groups[j + 1].ToString());
+            }
+            return dict;
+    }
     }
 }
